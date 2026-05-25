@@ -80,7 +80,7 @@
             <table class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="border-b border-[color:var(--color-border)]">
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">Student ID</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">NISN</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Name</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Class</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[20%]">Gender</th>
