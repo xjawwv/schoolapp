@@ -80,11 +80,11 @@
             <table class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="border-b border-[color:var(--color-border)]">
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">NIS</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Nama</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Kelas</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">Student ID</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Name</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Class</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[20%]">Gender</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[22%]">Telepon</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[22%]">Phone</th>
                 </tr>
               </thead>
             </table>
@@ -128,7 +128,7 @@
 
                   <tr v-if="stats.recent_students.length === 0">
                     <td colspan="5" class="py-8 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                      Tidak ada data siswa terbaru
+                      No new student data available
                     </td>
                   </tr>
                 </tbody>

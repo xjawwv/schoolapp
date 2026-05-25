@@ -113,10 +113,10 @@
                   <table class="w-full text-left border-collapse">
                     <thead>
                       <tr class="border-b border-[color:var(--color-border)]">
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Mata Pelajaran</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Subject</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Semester</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tahun Ajaran</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Skor</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Academic Year</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Score</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -132,7 +132,7 @@
                       </tr>
                       <tr v-if="grades.length === 0">
                         <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                          Belum ada catatan nilai untuk siswa ini
+                          No grade records found for this student
                         </td>
                       </tr>
                     </tbody>
@@ -145,9 +145,9 @@
                   <table class="w-full text-left border-collapse">
                     <thead>
                       <tr class="border-b border-[color:var(--color-border)]">
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tanggal</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Date</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Catatan</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -166,7 +166,7 @@
                       </tr>
                       <tr v-if="attendances.length === 0">
                         <td colspan="3" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                          Belum ada catatan kehadiran untuk siswa ini
+                          No attendance records found for this student
                         </td>
                       </tr>
                     </tbody>

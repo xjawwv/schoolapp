@@ -9,6 +9,10 @@ import { useApi } from "~/composables/useApi"
 const siteName = useState("siteName", () => "SMA N 1 METRO")
 const api = useApi()
 
+useHead({
+  title: siteName
+})
+
 onMounted(async () => {
   const cachedTheme = localStorage.getItem("theme") || "dark"
   document.documentElement.setAttribute("data-theme", cachedTheme)
