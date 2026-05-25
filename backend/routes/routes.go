@@ -56,6 +56,10 @@ func SetupRouter() *gin.Engine {
 			protected.PUT("/grades/:id", controllers.UpdateGrade)
 
 			protected.GET("/dashboard/stats", controllers.GetDashboardStats)
+
+			protected.GET("/settings", controllers.GetSettings)
+			protected.PUT("/settings", controllers.UpdateSettings)
+			protected.PUT("/settings/password", controllers.ChangePassword)
 		}
 	}
 

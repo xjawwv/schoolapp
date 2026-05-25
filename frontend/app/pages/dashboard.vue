@@ -77,35 +77,63 @@
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[600px]">
               <thead>
                 <tr class="border-b border-[color:var(--color-border)]">
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">NIS</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Nama</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Kelas</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Gender</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Telepon</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">NIS</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Nama</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Kelas</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[20%]">Gender</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[22%]">Telepon</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr
-                  v-for="student in stats.recent_students"
-                  :key="student.id"
-                  class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
-                >
-                  <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ student.nis }}</td>
-                  <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">{{ student.name }}</td>
-                  <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.class }}</td>
-                  <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.gender }}</td>
-                  <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ student.phone || '-' }}</td>
-                </tr>
-                <tr v-if="stats.recent_students.length === 0">
-                  <td colspan="5" class="py-8 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                    Tidak ada data siswa terbaru
-                  </td>
-                </tr>
-              </tbody>
             </table>
+
+            <div
+              ref="scrollContainer"
+              class="max-h-[220px] overflow-y-auto w-full relative no-scrollbar min-w-[600px]"
+              @mouseenter="isHovered = true"
+              @mouseleave="isHovered = false"
+              @touchstart="isHovered = true"
+              @touchend="isHovered = false"
+              @scroll="handleScroll"
+            >
+              <table class="w-full text-left border-collapse">
+                <tbody>
+                  <tr
+                    v-for="student in stats.recent_students"
+                    :key="'1-' + student.id"
+                    class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
+                  >
+                    <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ student.nis }}</td>
+                    <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">{{ student.name }}</td>
+                    <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ student.class }}</td>
+                    <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[20%]">{{ student.gender }}</td>
+                    <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono w-[22%]">{{ student.phone || '-' }}</td>
+                  </tr>
+
+                  <template v-if="stats.recent_students.length > 3">
+                    <tr
+                      v-for="student in stats.recent_students"
+                      :key="'2-' + student.id"
+                      class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
+                    >
+                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ student.nis }}</td>
+                      <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">{{ student.name }}</td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ student.class }}</td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[20%]">{{ student.gender }}</td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono w-[22%]">{{ student.phone || '-' }}</td>
+                    </tr>
+                  </template>
+
+                  <tr v-if="stats.recent_students.length === 0">
+                    <td colspan="5" class="py-8 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                      Tidak ada data siswa terbaru
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </main>
@@ -114,7 +142,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, onUnmounted, nextTick } from "vue"
 import {
   Users as UsersIcon,
   CalendarCheck as CalendarCheckIcon,
@@ -147,14 +175,82 @@ const stats = ref<{
   recent_students: []
 })
 
+const scrollContainer = ref<HTMLElement | null>(null)
+const isHovered = ref(false)
+let currentScroll = 0
+let animationFrameId: number | null = null
+
+function handleScroll() {
+  const el = scrollContainer.value
+  if (el && isHovered.value) {
+    currentScroll = el.scrollTop
+  }
+}
+
+function initAutoScroll() {
+  const el = scrollContainer.value
+  if (!el) {
+    setTimeout(initAutoScroll, 100)
+    return
+  }
+
+  if (el.scrollHeight <= el.clientHeight) {
+    setTimeout(initAutoScroll, 100)
+    return
+  }
+
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+  }
+
+  const scrollSpeed = 0.4
+
+  const scroll = () => {
+    if (isHovered.value) {
+      currentScroll = el.scrollTop
+    } else if (stats.value.recent_students.length > 3) {
+      currentScroll += scrollSpeed
+      el.scrollTop = currentScroll
+      const halfHeight = el.scrollHeight / 2
+      if (currentScroll >= halfHeight) {
+        currentScroll = 0
+        el.scrollTop = 0
+      }
+    }
+    animationFrameId = requestAnimationFrame(scroll)
+  }
+  animationFrameId = requestAnimationFrame(scroll)
+}
+
 onMounted(async () => {
   try {
     const res: any = await api.get("/api/dashboard/stats")
     if (res.success && res.data) {
       stats.value = res.data
+      if (stats.value.recent_students.length > 3) {
+        nextTick(() => {
+          initAutoScroll()
+        })
+      }
     }
   } catch (error) {
     console.error("Gagal memuat statistik dashboard", error)
   }
 })
+
+onUnmounted(() => {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+  }
+})
 </script>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+</style>

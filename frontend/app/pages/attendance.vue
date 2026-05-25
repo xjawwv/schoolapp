@@ -38,7 +38,7 @@
               <form @submit.prevent="handleSubmit" class="space-y-4">
                 <div class="space-y-1.5">
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Tanggal</label>
-                  <input v-model="formData.date" type="date" class="input w-full font-mono" required :disabled="isEdit" />
+                  <input v-model="formData.date" type="date" class="input w-full font-mono opacity-60 bg-[color:var(--color-surface)]" disabled />
                 </div>
 
                 <div class="space-y-1.5" v-if="!isEdit">
@@ -68,7 +68,13 @@
 
                 <div class="space-y-1.5">
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Catatan / Keterangan</label>
-                  <textarea v-model="formData.note" class="input w-full h-20 resize-none" placeholder="Catatan opsional (misal: surat dokter)"></textarea>
+                  <textarea
+                    v-model="formData.note"
+                    class="input w-full h-20 resize-none transition duration-150 disabled:cursor-not-allowed"
+                    :class="(formData.status === 'hadir' || formData.status === 'alpha' || !formData.status) ? 'opacity-60 bg-[color:var(--color-surface)] cursor-not-allowed' : ''"
+                    :placeholder="(formData.status === 'hadir' || formData.status === 'alpha') ? 'Catatan hanya untuk status Izin atau Sakit' : 'Catatan opsional (misal: surat dokter)'"
+                    :disabled="formData.status === 'hadir' || formData.status === 'alpha' || !formData.status"
+                  ></textarea>
                 </div>
 
                 <div class="flex items-center space-x-2 pt-2">
@@ -152,7 +158,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, watch } from "vue"
 import {
   AlertCircle as AlertCircleIcon,
   CheckCircle as CheckCircleIcon
@@ -180,6 +186,12 @@ const formData = ref({
   date: new Date().toISOString().split("T")[0],
   status: "",
   note: ""
+})
+
+watch(() => formData.value.status, (newStatus) => {
+  if (newStatus === "hadir" || newStatus === "alpha") {
+    formData.value.note = ""
+  }
 })
 
 onMounted(() => {

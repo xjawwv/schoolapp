@@ -31,7 +31,7 @@ func ConnectDB() {
 
 	DB = database
 
-	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{})
+	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{}, &models.Setting{})
 	if err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
@@ -40,6 +40,16 @@ func ConnectDB() {
 }
 
 func seedData() {
+	var settingCount int64
+	DB.Model(&models.Setting{}).Where("key = ?", "site_name").Count(&settingCount)
+	if settingCount == 0 {
+		siteName := models.Setting{
+			Key:   "site_name",
+			Value: "SMA N 1 METRO",
+		}
+		DB.Create(&siteName)
+	}
+
 	var userCount int64
 	DB.Model(&models.User{}).Count(&userCount)
 	if userCount == 0 {
