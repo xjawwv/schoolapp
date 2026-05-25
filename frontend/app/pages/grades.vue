@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div>
           <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
             Hasil Belajar
@@ -219,7 +219,7 @@ onMounted(() => {
 
 async function loadStudents() {
   try {
-    const res = await api.get("/api/students?limit=200")
+    const res: any = await api.get("/api/students?limit=200")
     if (res.success && res.data) {
       studentsList.value = res.data.students || []
     }
@@ -234,7 +234,7 @@ async function loadGradesList() {
     if (filterStudentID.value) {
       url += `?student_id=${filterStudentID.value}`
     }
-    const res = await api.get(url)
+    const res: any = await api.get(url)
     if (res.success && res.data) {
       gradesList.value = res.data || []
     }
@@ -258,7 +258,7 @@ async function handleSubmit() {
   errorMessage.value = ""
 
   try {
-    let res
+    let res: any
     if (isEdit.value && editingRecordId.value) {
       res = await api.put(`/api/grades/${editingRecordId.value}`, {
         score: formData.value.score,

@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div>
           <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
             Ikhtisar Sistem
@@ -149,7 +149,7 @@ const stats = ref<{
 
 onMounted(async () => {
   try {
-    const res = await api.get("/api/dashboard/stats")
+    const res: any = await api.get("/api/dashboard/stats")
     if (res.success && res.data) {
       stats.value = res.data
     }

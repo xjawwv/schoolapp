@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div>
           <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
             Kehadiran Harian
@@ -189,7 +189,7 @@ onMounted(() => {
 
 async function loadStudents() {
   try {
-    const res = await api.get("/api/students?limit=200")
+    const res: any = await api.get("/api/students?limit=200")
     if (res.success && res.data) {
       studentsList.value = res.data.students || []
     }
@@ -200,7 +200,7 @@ async function loadStudents() {
 
 async function loadAttendanceList() {
   try {
-    const res = await api.get(`/api/attendances?date=${filterDate.value}`)
+    const res: any = await api.get(`/api/attendances?date=${filterDate.value}`)
     if (res.success && res.data) {
       attendancesList.value = res.data || []
     }
@@ -219,7 +219,7 @@ async function handleSubmit() {
   errorMessage.value = ""
 
   try {
-    let res
+    let res: any
     if (isEdit.value && editingRecordId.value) {
       res = await api.put(`/api/attendances/${editingRecordId.value}`, {
         status: formData.value.status,
@@ -287,7 +287,7 @@ function showToast(msg: string) {
 
 function formatDate(dateStr: string): string {
   if (!dateStr) return "-"
-  return dateStr.split("T")[0]
+  return dateStr.split("T")[0] || "-"
 }
 
 function getStatusClass(status: string): string {

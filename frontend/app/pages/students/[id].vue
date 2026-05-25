@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-8 max-w-7xl w-full mx-auto space-y-8" v-if="student">
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8" v-if="student">
         <div>
           <NuxtLink to="/students" class="inline-flex items-center space-x-2 text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-85 font-semibold mb-4">
             <ChevronLeftIcon class="w-4 h-4" />
@@ -237,7 +237,7 @@ async function loadAllData() {
 
 async function fetchStudentProfile() {
   try {
-    const res = await api.get(`/api/students/${studentId.value}`)
+    const res: any = await api.get(`/api/students/${studentId.value}`)
     if (res.success && res.data) {
       student.value = res.data
     }
@@ -248,7 +248,7 @@ async function fetchStudentProfile() {
 
 async function fetchStudentGrades() {
   try {
-    const res = await api.get(`/api/grades?student_id=${studentId.value}`)
+    const res: any = await api.get(`/api/grades?student_id=${studentId.value}`)
     if (res.success && res.data) {
       grades.value = res.data || []
     }
@@ -259,7 +259,7 @@ async function fetchStudentGrades() {
 
 async function fetchStudentAttendance() {
   try {
-    const res = await api.get(`/api/attendances?student_id=${studentId.value}`)
+    const res: any = await api.get(`/api/attendances?student_id=${studentId.value}`)
     if (res.success && res.data) {
       attendances.value = res.data || []
     }
@@ -297,7 +297,7 @@ function formatDate(dateStr: string): string {
 function formatDateOnly(dateStr: string): string {
   if (!dateStr) return "-"
   const d = new Date(dateStr)
-  return d.toISOString().split("T")[0]
+  return d.toISOString().split("T")[0] || "-"
 }
 
 function getStatusClass(status: string): string {

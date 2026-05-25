@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-8 max-w-7xl w-full mx-auto space-y-8">
+      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
@@ -32,7 +32,7 @@
                 v-model="searchQuery"
                 @input="handleSearch"
                 type="text"
-                class="input pl-10 w-full"
+                class="input !pl-10 w-full"
                 placeholder="Cari berdasarkan nama, kelas, atau NIS..."
               />
             </div>
@@ -45,6 +45,7 @@
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="border-b border-[color:var(--color-border)]">
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-12 text-center">No</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">NIS</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Nama</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Kelas</th>
@@ -55,10 +56,11 @@
               </thead>
               <tbody>
                 <tr
-                  v-for="student in students"
+                  v-for="(student, index) in students"
                   :key="student.id"
                   class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                 >
+                  <td class="py-3.5 px-4 text-sm text-[color:var(--color-muted)] font-semibold text-center font-mono w-12">{{ (currentPage - 1) * 10 + index + 1 }}</td>
                   <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ student.nis }}</td>
                   <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">
                     <NuxtLink :to="`/students/${student.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
@@ -68,17 +70,43 @@
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.class }}</td>
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.gender }}</td>
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ student.phone || '-' }}</td>
-                  <td class="py-3.5 px-4 text-sm text-right space-x-3 whitespace-nowrap">
-                    <button @click="openEditModal(student)" class="text-xs uppercase tracking-wider text-[color:var(--color-text)] hover:text-[color:var(--color-accent)] transition duration-100 cursor-pointer">
-                      Ubah
+                  <td class="py-3.5 px-4 text-sm text-right relative">
+                    <button
+                      @click="toggleDropdown(student.id)"
+                      class="text-[color:var(--color-muted)] hover:text-[color:var(--color-accent)] transition duration-150 p-1 cursor-pointer focus:outline-none"
+                    >
+                      <MoreHorizontalIcon class="w-5 h-5 inline" />
                     </button>
-                    <button @click="confirmDelete(student)" class="text-xs uppercase tracking-wider text-[color:var(--color-error)] hover:opacity-80 transition duration-100 cursor-pointer">
-                      Hapus
-                    </button>
+
+                    <div
+                      v-if="activeDropdownId === student.id"
+                      class="absolute right-4 mt-1 w-32 bg-[color:var(--color-surface)] border border-[color:var(--color-border)] shadow-[--shadow-md] py-1 z-20 flex flex-col text-left"
+                    >
+                      <button
+                        @click="handleEditAction(student)"
+                        class="flex items-center space-x-2 px-4 py-2.5 text-xs uppercase tracking-wider text-[color:var(--color-text)] hover:bg-[color:var(--color-bg)] hover:text-[color:var(--color-heading)] transition duration-150 w-full text-left cursor-pointer font-semibold"
+                      >
+                        <PencilIcon class="w-3.5 h-3.5 shrink-0" />
+                        <span>Ubah</span>
+                      </button>
+                      <button
+                        @click="handleDeleteAction(student)"
+                        class="flex items-center space-x-2 px-4 py-2.5 text-xs uppercase tracking-wider text-[color:var(--color-error)] hover:bg-[color:var(--color-bg)] transition duration-150 w-full text-left cursor-pointer font-semibold"
+                      >
+                        <Trash2Icon class="w-3.5 h-3.5 shrink-0" />
+                        <span>Hapus</span>
+                      </button>
+                    </div>
+
+                    <div
+                      v-if="activeDropdownId === student.id"
+                      @click="activeDropdownId = null"
+                      class="fixed inset-0 z-10 cursor-default"
+                    ></div>
                   </td>
                 </tr>
                 <tr v-if="students.length === 0">
-                  <td colspan="6" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                  <td colspan="7" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                     Tidak ditemukan data siswa
                   </td>
                 </tr>
@@ -146,7 +174,10 @@ import {
   Search as SearchIcon,
   CheckCircle as CheckCircleIcon,
   ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  MoreHorizontal as MoreHorizontalIcon,
+  Pencil as PencilIcon,
+  Trash2 as Trash2Icon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 import StudentForm from "~/components/StudentForm.vue"
@@ -169,6 +200,25 @@ const toastMessage = ref("")
 
 const showDeleteConfirm = ref(false)
 const studentToDelete = ref<any | null>(null)
+const activeDropdownId = ref<string | null>(null)
+
+function toggleDropdown(id: string) {
+  if (activeDropdownId.value === id) {
+    activeDropdownId.value = null
+  } else {
+    activeDropdownId.value = id
+  }
+}
+
+function handleEditAction(student: any) {
+  activeDropdownId.value = null
+  openEditModal(student)
+}
+
+function handleDeleteAction(student: any) {
+  activeDropdownId.value = null
+  confirmDelete(student)
+}
 
 let debounceTimer: any = null
 
@@ -178,7 +228,7 @@ onMounted(() => {
 
 async function fetchStudents() {
   try {
-    const res = await api.get(`/api/students?page=${currentPage.value}&limit=10&search=${searchQuery.value}`)
+    const res: any = await api.get(`/api/students?page=${currentPage.value}&limit=10&search=${searchQuery.value}`)
     if (res.success && res.data) {
       students.value = res.data.students || []
       totalStudents.value = res.data.total || 0
@@ -238,7 +288,7 @@ async function handleDelete() {
   if (!studentToDelete.value) return
 
   try {
-    const res = await api.delete(`/api/students/${studentToDelete.value.id}`)
+    const res: any = await api.delete(`/api/students/${studentToDelete.value.id}`)
     if (res.success) {
       showToast("Data siswa dan riwayat relasinya berhasil dihapus")
       fetchStudents()
