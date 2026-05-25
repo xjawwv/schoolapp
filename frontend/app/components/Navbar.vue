@@ -15,26 +15,49 @@
           <span class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">{{ user.role }}</span>
         </div>
       </div>
-      <button @click="logout" class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[color:var(--color-error)] hover:opacity-80 transition duration-150 cursor-pointer">
-        <LogOutIcon class="w-4 h-4" />
-        <span>Keluar</span>
-      </button>
+      <div class="flex items-center space-x-4 border-l border-[color:var(--color-border)] pl-4">
+        <button @click="toggleTheme" class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[color:var(--color-text)] hover:opacity-80 transition duration-150 cursor-pointer">
+          <SunIcon v-if="theme === 'dark'" class="w-4 h-4 text-[color:var(--color-accent)]" />
+          <MoonIcon v-else class="w-4 h-4 text-[color:var(--color-accent)]" />
+          <span>{{ theme === 'dark' ? 'Terang' : 'Gelap' }}</span>
+        </button>
+        <button @click="logout" class="flex items-center space-x-2 text-xs uppercase tracking-wider text-[color:var(--color-error)] hover:opacity-80 transition duration-150 cursor-pointer">
+          <LogOutIcon class="w-4 h-4" />
+          <span>Keluar</span>
+        </button>
+      </div>
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue"
-import { LogOut as LogOutIcon } from "lucide-vue-next"
+import {
+  LogOut as LogOutIcon,
+  Sun as SunIcon,
+  Moon as MoonIcon
+} from "lucide-vue-next"
 
 const user = ref<{ name: string; email: string; role: string } | null>(null)
+const theme = ref("dark")
 
 onMounted(() => {
   const cached = localStorage.getItem("user")
   if (cached) {
     user.value = JSON.parse(cached)
   }
+
+  const cachedTheme = localStorage.getItem("theme") || "dark"
+  theme.value = cachedTheme
+  document.documentElement.setAttribute("data-theme", cachedTheme)
 })
+
+function toggleTheme() {
+  const newTheme = theme.value === "dark" ? "light" : "dark"
+  theme.value = newTheme
+  localStorage.setItem("theme", newTheme)
+  document.documentElement.setAttribute("data-theme", newTheme)
+}
 
 function logout() {
   localStorage.removeItem("token")

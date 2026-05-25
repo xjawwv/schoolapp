@@ -9,7 +9,20 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     public: {
-      apiUrl: process.env.VITE_API_URL || "http://localhost:8080"
+      apiUrl: process.env.VITE_API_URL || "http://localhost:8081"
     }
+  },
+  app: {
+    head: {
+      script: [
+        {
+          innerHTML: `(function(){const t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();`,
+          type: "text/javascript"
+        }
+      ]
+    }
+  },
+  experimental: {
+    appManifest: false
   }
 })
