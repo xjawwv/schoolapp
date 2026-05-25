@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8" v-if="student">
+      <main class="p-6 sm:p-8 pt-8 sm:pt-10 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8" v-if="student">
         <div>
           <NuxtLink to="/students" class="inline-flex items-center space-x-2 text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-85 font-semibold mb-4">
             <ChevronLeftIcon class="w-4 h-4" />

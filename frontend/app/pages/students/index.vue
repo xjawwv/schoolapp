@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+      <main class="p-6 sm:p-8 pt-8 sm:pt-10 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
@@ -27,12 +27,13 @@
         <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
           <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
             <div class="relative w-full md:max-w-md">
-              <SearchIcon class="absolute left-3.5 top-3 w-4 h-4 text-[color:var(--color-muted)]" />
+              <SearchIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-muted)] pointer-events-none" />
               <input
                 v-model="searchQuery"
                 @input="handleSearch"
                 type="text"
-                class="input !pl-10 w-full"
+                class="input w-full"
+                style="padding-left: 2.75rem !important;"
                 placeholder="Cari berdasarkan nama, kelas, atau NIS..."
               />
             </div>

@@ -10,7 +10,7 @@
       class="fixed inset-y-0 left-0 z-40 lg:static w-[240px] bg-[color:var(--color-surface)] border-r border-[color:var(--color-border)] flex flex-col h-screen shrink-0 transition-transform duration-300 transform lg:transform-none"
       :class="isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
     >
-      <div class="h-20 flex items-center justify-between px-6 border-b border-[color:var(--color-border)]">
+      <div class="h-16 flex items-center justify-between px-6 border-b border-[color:var(--color-border)]">
         <span class="text-lg font-bold text-[color:var(--color-heading)] tracking-wider">
           SMA N 1 METRO
         </span>

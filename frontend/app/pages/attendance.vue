@@ -3,7 +3,7 @@
     <Sidebar />
     <div class="flex-1 flex flex-col overflow-y-auto">
       <Navbar />
-      <main class="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+      <main class="p-6 sm:p-8 pt-8 sm:pt-10 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
         <div>
           <h2 class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-accent)] font-semibold mb-2">
             Kehadiran Harian
