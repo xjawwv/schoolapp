@@ -67,7 +67,7 @@
                   <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Password Lama</label>
                   <input
                     v-model="passwordForm.old_password"
-                    type="password"
+                    :type="showPassword ? 'text' : 'password'"
                     class="input w-full font-mono"
                     placeholder="••••••••"
                     required
@@ -78,7 +78,7 @@
                   <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Password Baru</label>
                   <input
                     v-model="passwordForm.new_password"
-                    type="password"
+                    :type="showPassword ? 'text' : 'password'"
                     class="input w-full font-mono"
                     placeholder="••••••••"
                     required
@@ -89,12 +89,24 @@
                   <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Konfirmasi Password Baru</label>
                   <input
                     v-model="passwordForm.confirm_password"
-                    type="password"
+                    :type="showPassword ? 'text' : 'password'"
                     class="input w-full font-mono"
                     placeholder="••••••••"
                     required
                   />
                 </div>
+              </div>
+
+              <div class="flex items-center space-x-2 pt-1">
+                <input
+                  v-model="showPassword"
+                  type="checkbox"
+                  id="show-password-settings"
+                  class="h-4 w-4 rounded border-[color:var(--color-border)] bg-[color:var(--color-bg)] text-[color:var(--color-accent)] focus:ring-[color:var(--color-accent)] focus:ring-offset-[color:var(--color-surface)] cursor-pointer"
+                />
+                <label for="show-password-settings" class="text-xs text-[color:var(--color-text)] font-semibold select-none cursor-pointer">
+                  Tampilkan Kata Sandi
+                </label>
               </div>
 
               <div class="pt-2">
@@ -126,6 +138,7 @@ definePageMeta({
 
 const api = useApi()
 const siteName = useState("siteName", () => "SMA N 1 METRO")
+const showPassword = ref(false)
 
 const toast = ref<{ message: string; type: "success" | "error" }>({
   message: "",
@@ -174,6 +187,7 @@ async function saveSiteSettings() {
     })
     if (res.success) {
       siteName.value = siteSettings.value.site_name
+      localStorage.setItem("siteName", siteSettings.value.site_name)
       showToast("Pengaturan identitas aplikasi berhasil disimpan", "success")
     } else {
       showToast(res.message || "Gagal menyimpan pengaturan", "error")

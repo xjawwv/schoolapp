@@ -38,6 +38,8 @@ func SetupRouter() *gin.Engine {
 			auth.POST("/register", controllers.Register)
 		}
 
+		api.GET("/settings", controllers.GetSettings)
+
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 		{
@@ -57,7 +59,6 @@ func SetupRouter() *gin.Engine {
 
 			protected.GET("/dashboard/stats", controllers.GetDashboardStats)
 
-			protected.GET("/settings", controllers.GetSettings)
 			protected.PUT("/settings", controllers.UpdateSettings)
 			protected.PUT("/settings/password", controllers.ChangePassword)
 		}

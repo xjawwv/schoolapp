@@ -13,16 +13,19 @@ onMounted(async () => {
   const cachedTheme = localStorage.getItem("theme") || "dark"
   document.documentElement.setAttribute("data-theme", cachedTheme)
 
-  const token = localStorage.getItem("token")
-  if (token) {
-    try {
-      const res: any = await api.get("/api/settings")
-      if (res.success && res.data && res.data.site_name) {
-        siteName.value = res.data.site_name
-      }
-    } catch (e) {
-      console.error(e)
+  const cachedSiteName = localStorage.getItem("siteName")
+  if (cachedSiteName) {
+    siteName.value = cachedSiteName
+  }
+
+  try {
+    const res: any = await api.get("/api/settings")
+    if (res.success && res.data && res.data.site_name) {
+      siteName.value = res.data.site_name
+      localStorage.setItem("siteName", res.data.site_name)
     }
+  } catch (e) {
+    console.error(e)
   }
 })
 </script>

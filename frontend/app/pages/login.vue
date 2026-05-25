@@ -1,71 +1,122 @@
 <template>
-  <div class="min-h-screen bg-[color:var(--color-bg)] flex items-center justify-center px-4">
-    <div class="w-full max-w-md bg-[color:var(--color-surface)] border border-[color:var(--color-border)] border-l-4 border-l-[color:var(--color-accent)] p-8 shadow-[--shadow-lg]">
-      <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold tracking-tight mb-2 text-[color:var(--color-heading)]">
-          SMA N 1 METRO
-        </h1>
-        <p class="text-xs uppercase tracking-[0.2em] text-[color:var(--color-muted)]">
-          Sistem Manajemen Kesiswaan
-        </p>
+  <div class="min-h-screen bg-[color:var(--color-bg)] flex flex-col lg:flex-row">
+    <div class="hidden lg:flex lg:w-1/2 flex-col justify-between p-16 bg-black border-r border-[color:var(--color-border)] relative overflow-hidden shrink-0">
+      <div class="absolute -right-24 -bottom-24 w-96 h-96 rounded-full bg-[color:var(--color-accent)]/10 blur-[120px] pointer-events-none"></div>
+
+      <div>
+        <span class="text-xs uppercase tracking-[0.25em] font-semibold text-[color:var(--color-accent)] mb-4 block">
+          Portal Digital Kesiswaan
+        </span>
+        <h2 class="text-7xl font-display font-black tracking-tight text-white leading-[1.05]">
+          Sistem<br />
+          Manajemen<br />
+          Kesiswaan.
+        </h2>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
-        <div v-if="errorMessage" class="bg-[color:var(--color-bg)] border border-[color:var(--color-error)] p-3 text-sm text-[color:var(--color-error)] font-medium flex items-center space-x-2">
-          <AlertCircleIcon class="w-4 h-4 shrink-0" />
-          <span>{{ errorMessage }}</span>
+      <div class="space-y-2 relative z-10">
+        <p class="text-lg font-semibold text-white tracking-wide truncate">
+          {{ siteName }}
+        </p>
+        <p class="text-xs text-[color:var(--color-muted)] max-w-sm uppercase tracking-wider leading-relaxed">
+          Platform administrasi terpadu untuk pencatatan absensi, pengolahan nilai akademik, dan direktori data siswa.
+        </p>
+      </div>
+    </div>
+
+    <div class="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-16">
+      <div class="w-full max-w-md space-y-8 bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-8 sm:p-10 shadow-[--shadow-lg] relative overflow-hidden">
+        <div class="lg:hidden text-center mb-6">
+          <span class="text-[10px] uppercase tracking-[0.2em] font-bold text-[color:var(--color-accent)] mb-2 block">
+            Portal Digital Kesiswaan
+          </span>
+          <h1 class="text-3xl font-display font-black tracking-tight text-[color:var(--color-heading)]">
+            {{ siteName }}
+          </h1>
         </div>
 
         <div class="space-y-2">
-          <label for="email" class="block text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">
-            Pos Elektronik
-          </label>
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            class="input w-full"
-            placeholder="nama@sekolah.com"
-            required
-            autocomplete="email"
-          />
+          <h2 class="text-2xl font-bold tracking-tight text-[color:var(--color-heading)]">
+            Selamat Datang
+          </h2>
+          <p class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">
+            Masukkan kredensial akun untuk mengakses sistem
+          </p>
         </div>
 
-        <div class="space-y-2">
-          <label for="password" class="block text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">
-            Kata Sandi
-          </label>
-          <input
-            id="password"
-            v-model="password"
-            type="password"
-            class="input w-full"
-            placeholder="••••••••"
-            required
-            autocomplete="current-password"
-          />
+        <form @submit.prevent="handleLogin" class="space-y-6">
+          <div v-if="errorMessage" class="bg-[color:var(--color-bg)] border border-[color:var(--color-error)] p-3 text-sm text-[color:var(--color-error)] font-medium flex items-center space-x-2">
+            <AlertCircleIcon class="w-4 h-4 shrink-0" />
+            <span>{{ errorMessage }}</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="email" class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">
+              Pos Elektronik
+            </label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              class="input w-full"
+              placeholder="nama@sekolah.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label for="password" class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">
+              Kata Sandi
+            </label>
+            <div class="relative flex items-center">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                class="input w-full pr-10 font-mono"
+                placeholder="••••••••"
+                required
+                autocomplete="current-password"
+              />
+              <button
+                type="button"
+                @click="showPassword = !showPassword"
+                class="absolute right-3 text-[color:var(--color-muted)] hover:text-[color:var(--color-text)] transition duration-150 focus:outline-none cursor-pointer"
+              >
+                <EyeIcon v-if="showPassword" class="w-4 h-4 shrink-0" />
+                <EyeOffIcon v-else class="w-4 h-4 shrink-0" />
+              </button>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="button-primary w-full flex items-center justify-center space-x-2 py-3"
+            >
+              <span v-if="isLoading" class="animate-spin rounded-full h-4 w-4 border-2 border-[color:var(--color-accent-fg)] border-t-transparent"></span>
+              <span v-else>Masuk ke Sistem</span>
+            </button>
+          </div>
+        </form>
+
+        <div class="border-t border-[color:var(--color-border)] pt-6 text-center text-xs text-[color:var(--color-muted)]">
+          Gunakan <span class="font-mono text-[color:var(--color-text)]">admin@sekolah.com</span> / <span class="font-mono text-[color:var(--color-text)]">admin123</span> untuk masuk
         </div>
-
-        <button
-          type="submit"
-          :disabled="isLoading"
-          class="button-primary w-full flex items-center justify-center space-x-2 transition duration-150 py-3"
-        >
-          <span v-if="isLoading" class="animate-spin rounded-full h-4 w-4 border-2 border-[color:var(--color-accent-fg)] border-t-transparent"></span>
-          <span v-else>Masuk</span>
-        </button>
-      </form>
-
-      <div class="mt-8 text-center text-xs text-[color:var(--color-muted)]">
-        Gunakan admin@sekolah.com / admin123 untuk masuk
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
-import { AlertCircle as AlertCircleIcon } from "lucide-vue-next"
+import { ref, onMounted } from "vue"
+import {
+  AlertCircle as AlertCircleIcon,
+  Eye as EyeIcon,
+  EyeOff as EyeOffIcon
+} from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 
 definePageMeta({
@@ -76,8 +127,26 @@ const email = ref("")
 const password = ref("")
 const isLoading = ref(false)
 const errorMessage = ref("")
+const showPassword = ref(false)
+const siteName = useState("siteName", () => "SMA N 1 METRO")
 
 const api = useApi()
+
+onMounted(async () => {
+  const cachedSiteName = localStorage.getItem("siteName")
+  if (cachedSiteName) {
+    siteName.value = cachedSiteName
+  }
+  try {
+    const res: any = await api.get("/api/settings")
+    if (res.success && res.data && res.data.site_name) {
+      siteName.value = res.data.site_name
+      localStorage.setItem("siteName", res.data.site_name)
+    }
+  } catch (e) {
+    console.error(e)
+  }
+})
 
 async function handleLogin() {
   if (!email.value || !password.value) {
@@ -89,7 +158,7 @@ async function handleLogin() {
   errorMessage.value = ""
 
   try {
-    const res = await api.post("/api/auth/login", {
+    const res: any = await api.post("/api/auth/login", {
       email: email.value,
       password: password.value
     })
