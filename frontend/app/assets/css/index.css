@@ -1,0 +1,120 @@
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code&family=Instrument+Serif:ital@0;1&family=Lato:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Instrument Serif", serif;
+  --font-body: "Lato", sans-serif;
+  --font-mono: "Fira Code", monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  --color-bg: #0e0e0e;
+  --color-surface: #161616;
+  --color-border: #2a2a2a;
+  --color-muted: #5a5a5a;
+  --color-text: #e8e8e8;
+  --color-heading: #ffffff;
+  --color-accent: #e8c547;
+  --color-accent-fg: #0e0e0e;
+  --color-error: #e05252;
+  --color-success: #4caf7d;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.6);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--color-heading);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.button-primary {
+  background: var(--color-accent);
+  color: var(--color-accent-fg);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: opacity 80ms ease;
+}
+
+.button-primary:hover {
+  opacity: 0.9;
+}
+
+.button-ghost {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 2px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 80ms ease;
+}
+
+.button-ghost:hover {
+  background-color: var(--color-surface);
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-accent);
+  padding: var(--space-6);
+  border-radius: 0;
+}
+
+.input {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  padding: 8px 12px;
+  transition: border-color 120ms ease;
+}
+
+.input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}

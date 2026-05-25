@@ -1,0 +1,116 @@
+package config
+
+import (
+	"fmt"
+	"log"
+	"os"
+	"time"
+
+	"schoolapp/backend/models"
+
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+)
+
+var DB *gorm.DB
+
+func ConnectDB() {
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	sslmode := os.Getenv("DB_SSLMODE")
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", host, user, password, dbname, port, sslmode)
+	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+
+	DB = database
+
+	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{})
+	if err != nil {
+		log.Fatal("Failed to run migrations:", err)
+	}
+
+	seedData()
+}
+
+func seedData() {
+	var userCount int64
+	DB.Model(&models.User{}).Count(&userCount)
+	if userCount == 0 {
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		if err == nil {
+			admin := models.User{
+				Name:     "Administrator",
+				Email:    "admin@sekolah.com",
+				Password: string(hashedPassword),
+				Role:     "admin",
+			}
+			DB.Create(&admin)
+		}
+	}
+
+	var studentCount int64
+	DB.Model(&models.Student{}).Count(&studentCount)
+	if studentCount == 0 {
+		students := []models.Student{
+			{NIS: "10001", Name: "Ahmad Fauzi", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Merdeka No. 12", Phone: "081234567890"},
+			{NIS: "10002", Name: "Budi Santoso", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Mawar No. 4", Phone: "081234567891"},
+			{NIS: "10003", Name: "Citra Lestari", Class: "X-A", Gender: "Perempuan", Address: "Jl. Melati No. 8", Phone: "081234567892"},
+			{NIS: "10004", Name: "Dwi Cahyo", Class: "XI-B", Gender: "Laki-laki", Address: "Jl. Dahlia No. 15", Phone: "081234567893"},
+			{NIS: "10005", Name: "Eka Putri", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Anggrek No. 20", Phone: "081234567894"},
+			{NIS: "10006", Name: "Fitriani", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Tulip No. 3", Phone: "081234567895"},
+			{NIS: "10007", Name: "Gede Wahyu", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Cempaka No. 7", Phone: "081234567896"},
+			{NIS: "10008", Name: "Haryono", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Kamboja No. 9", Phone: "081234567897"},
+			{NIS: "10009", Name: "Indah Permata", Class: "XII-C", Gender: "Perempuan", Address: "Jl. Kenanga No. 2", Phone: "081234567898"},
+			{NIS: "10010", Name: "Joko Susilo", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Teratai No. 11", Phone: "081234567899"},
+		}
+
+		for i := range students {
+			DB.Create(&students[i])
+		}
+
+		var createdStudents []models.Student
+		DB.Find(&createdStudents)
+
+		if len(createdStudents) >= 5 {
+			today := time.Now()
+			yesterday := today.AddDate(0, 0, -1)
+
+			attendances := []models.Attendance{
+				{StudentID: createdStudents[0].ID, Date: today, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[1].ID, Date: today, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[2].ID, Date: today, Status: "sakit", Note: "Demam tinggi"},
+				{StudentID: createdStudents[3].ID, Date: today, Status: "izin", Note: "Acara keluarga"},
+				{StudentID: createdStudents[4].ID, Date: today, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[0].ID, Date: yesterday, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[1].ID, Date: yesterday, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[2].ID, Date: yesterday, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[3].ID, Date: yesterday, Status: "hadir", Note: ""},
+				{StudentID: createdStudents[4].ID, Date: yesterday, Status: "alpha", Note: "Tanpa keterangan"},
+			}
+			for i := range attendances {
+				DB.Create(&attendances[i])
+			}
+
+			grades := []models.Grade{
+				{StudentID: createdStudents[0].ID, Subject: "Matematika", Score: 85.5, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[0].ID, Subject: "Fisika", Score: 78.0, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[1].ID, Subject: "Matematika", Score: 90.0, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[1].ID, Subject: "Bahasa Indonesia", Score: 88.5, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[2].ID, Subject: "Matematika", Score: 65.0, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[2].ID, Subject: "Kimia", Score: 72.5, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[3].ID, Subject: "Sejarah", Score: 82.0, Semester: 1, AcademicYear: "2025/2026"},
+				{StudentID: createdStudents[4].ID, Subject: "Bahasa Inggris", Score: 95.0, Semester: 1, AcademicYear: "2025/2026"},
+			}
+			for i := range grades {
+				DB.Create(&grades[i])
+			}
+		}
+	}
+}
