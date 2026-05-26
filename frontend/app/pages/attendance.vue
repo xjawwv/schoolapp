@@ -325,13 +325,16 @@ function getGPSLocation() {
   navigator.geolocation.getCurrentPosition(
     (position) => {
       if (enableAntiFakeGPS.value === "true") {
+        const isPatched = !/\{\s*\[native code\]\s*\}/.test(Function.prototype.toString.call(navigator.geolocation.getCurrentPosition)) ||
+                          !/\{\s*\[native code\]\s*\}/.test(Function.prototype.toString.call(navigator.geolocation.watchPosition))
         const isMocked = (position as any).mocked === true ||
                          (position.coords as any).mocked === true ||
                          (position.coords as any).isFromMockProvider === true ||
-                         position.coords.accuracy === 0
+                         position.coords.accuracy === 0 ||
+                         isPatched
         if (isMocked) {
           gpsStatus.value = "error"
-          gpsErrorMsg.value = "Absensi ditolak: Terdeteksi penggunaan aplikasi Fake GPS / Pemalsu Lokasi"
+          gpsErrorMsg.value = "Absensi ditolak: Terdeteksi penggunaan aplikasi/ekstensi Fake GPS atau Pemalsu Lokasi"
           studentLatitude.value = null
           studentLongitude.value = null
           distanceToSchool.value = null
