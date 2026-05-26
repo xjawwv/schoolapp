@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
+
 	"schoolapp/backend/config"
 	"schoolapp/backend/models"
 
@@ -74,10 +76,16 @@ func UpdateSettings(c *gin.Context) {
 func ChangePassword(c *gin.Context) {
 	var input PasswordInput
 	if err := c.ShouldBindJSON(&input); err != nil {
+		message := "Input tidak valid"
+		if strings.Contains(err.Error(), "min") {
+			message = "Kata sandi baru harus minimal 6 karakter"
+		} else if strings.Contains(err.Error(), "required") {
+			message = "Kata sandi lama dan baru wajib diisi"
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": err.Error(),
+			"message": message,
 		})
 		return
 	}
@@ -86,10 +94,10 @@ func ChangePassword(c *gin.Context) {
 
 	var user models.User
 	if err := config.DB.Where("id = ?", userID).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": "Pengguna tidak ditemukan",
+			"message": "Sesi tidak valid atau pengguna tidak ditemukan",
 		})
 		return
 	}

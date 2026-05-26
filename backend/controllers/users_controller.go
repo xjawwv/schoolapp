@@ -363,10 +363,10 @@ func UploadAvatar(c *gin.Context) {
 
 	var user models.User
 	if err := config.DB.First(&user, "id = ?", currentUserIdStr).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
+		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": "Pengguna tidak ditemukan",
+			"message": "Sesi tidak valid atau pengguna tidak ditemukan",
 		})
 		return
 	}
