@@ -176,7 +176,14 @@ func InputAttendance(c *gin.Context) {
 		}
 
 		nowTimeStr := time.Now().Format("15:04")
-		if nowTimeStr < startTimeStr || nowTimeStr > endTimeStr {
+		isTimeInvalid := false
+		if startTimeStr <= endTimeStr {
+			isTimeInvalid = nowTimeStr < startTimeStr || nowTimeStr > endTimeStr
+		} else {
+			isTimeInvalid = nowTimeStr < startTimeStr && nowTimeStr > endTimeStr
+		}
+
+		if isTimeInvalid {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"success": false,
 				"data":    nil,

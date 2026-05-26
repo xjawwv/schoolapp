@@ -489,7 +489,14 @@ async function handleSubmit() {
   const timestampStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
   const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`
 
-  if (isStudent && (nowTimeStr < attendanceStartTime.value || nowTimeStr > attendanceEndTime.value)) {
+  let isTimeInvalid = false
+  if (attendanceStartTime.value <= attendanceEndTime.value) {
+    isTimeInvalid = nowTimeStr < attendanceStartTime.value || nowTimeStr > attendanceEndTime.value
+  } else {
+    isTimeInvalid = nowTimeStr < attendanceStartTime.value && nowTimeStr > attendanceEndTime.value
+  }
+
+  if (isStudent && isTimeInvalid) {
     errorMessage.value = `Absensi ditolak: Waktu operasional absensi mandiri hanya diperbolehkan pukul ${attendanceStartTime.value} s.d. ${attendanceEndTime.value}`
     return
   }
