@@ -175,7 +175,8 @@ func InputAttendance(c *gin.Context) {
 			endTimeStr = endSetting.Value
 		}
 
-		nowTimeStr := time.Now().Format("15:04")
+		loc := time.FixedZone("WIB", 7*3600)
+		nowTimeStr := time.Now().In(loc).Format("15:04")
 		isTimeInvalid := false
 		if startTimeStr <= endTimeStr {
 			isTimeInvalid = nowTimeStr < startTimeStr || nowTimeStr > endTimeStr
