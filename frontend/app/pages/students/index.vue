@@ -13,7 +13,7 @@
               Data Siswa Terdaftar
             </h1>
           </div>
-          <button @click="openCreateModal" class="button-primary flex items-center space-x-2 self-start md:self-auto py-3">
+          <button v-if="currentUser?.role === 'admin'" @click="openCreateModal" class="button-primary flex items-center space-x-2 self-start md:self-auto py-3">
             <PlusIcon class="w-4 h-4" />
             <span>Tambah Siswa</span>
           </button>
@@ -52,7 +52,7 @@
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Class</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Gender</th>
                   <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Phone</th>
-                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Actions</th>
+                  <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role === 'admin'">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -71,7 +71,7 @@
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.class }}</td>
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ student.gender }}</td>
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ student.phone || '-' }}</td>
-                  <td class="py-3.5 px-4 text-sm text-right relative">
+                  <td class="py-3.5 px-4 text-sm text-right relative" v-if="currentUser?.role === 'admin'">
                     <button
                       @click="toggleDropdown(student.id)"
                       class="text-[color:var(--color-muted)] hover:text-[color:var(--color-accent)] transition duration-150 p-1 cursor-pointer focus:outline-none"
@@ -107,7 +107,7 @@
                   </td>
                 </tr>
                 <tr v-if="students.length === 0">
-                  <td colspan="7" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                  <td :colspan="currentUser?.role === 'admin' ? 7 : 6" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                     No student data found
                   </td>
                 </tr>
@@ -188,6 +188,7 @@ definePageMeta({
 })
 
 const api = useApi()
+const currentUser = useState<any>("currentUser", () => null)
 
 const students = ref<any[]>([])
 const totalStudents = ref(0)
@@ -224,6 +225,10 @@ function handleDeleteAction(student: any) {
 let debounceTimer: any = null
 
 onMounted(() => {
+  const cached = localStorage.getItem("user")
+  if (cached && !currentUser.value) {
+    currentUser.value = JSON.parse(cached)
+  }
   fetchStudents()
 })
 

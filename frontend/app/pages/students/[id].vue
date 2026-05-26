@@ -18,7 +18,7 @@
                 {{ student.name }}
               </h1>
             </div>
-            <button @click="openEditModal" class="button-primary text-xs font-semibold uppercase tracking-wider py-3">
+            <button v-if="currentUser?.role === 'admin'" @click="openEditModal" class="button-primary text-xs font-semibold uppercase tracking-wider py-3">
               Ubah Profil
             </button>
           </div>
@@ -136,6 +136,7 @@
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Semester</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Academic Year</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Score</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -148,9 +149,14 @@
                         <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">Semester {{ grade.semester }}</td>
                         <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ grade.academic_year }}</td>
                         <td class="py-3.5 px-4 text-sm text-right font-bold text-[color:var(--color-accent)] font-mono">{{ grade.score.toFixed(1) }}</td>
+                        <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
+                          <button @click="openGradeModal(grade)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
+                            Ubah
+                          </button>
+                        </td>
                       </tr>
                       <tr v-if="grades.length === 0">
-                        <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                        <td :colspan="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi' ? 5 : 4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                           No grade records found for this student
                         </td>
                       </tr>
@@ -203,6 +209,86 @@
         @close="closeForm"
         @saved="onStudentSaved"
       />
+
+      <div v-if="showGradeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 w-full max-w-md space-y-6 shadow-xl relative">
+          <div class="flex justify-between items-center border-b border-[color:var(--color-border)] pb-4">
+            <div>
+              <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">Ubah Catatan Nilai</h3>
+              <p class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">Perbarui evaluasi mata pelajaran siswa</p>
+            </div>
+            <button @click="closeGradeModal" class="text-[color:var(--color-muted)] hover:text-[color:var(--color-text)] cursor-pointer">
+              <XIcon class="w-5 h-5" />
+            </button>
+          </div>
+
+          <div v-if="gradeError" class="bg-[color:var(--color-bg)] border border-[color:var(--color-error)] p-3 text-sm text-[color:var(--color-error)] font-medium flex items-center space-x-2">
+            <AlertCircleIcon class="w-4 h-4 shrink-0" />
+            <span>{{ gradeError }}</span>
+          </div>
+
+          <form @submit.prevent="handleGradeSubmit" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Mata Pelajaran</label>
+              <select v-model="gradeForm.subject" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
+                <option value="" disabled>Pilih Bidang Studi</option>
+                <option value="Matematika">Matematika</option>
+                <option value="Fisika">Fisika</option>
+                <option value="Kimia">Kimia</option>
+                <option value="Biologi">Biologi</option>
+                <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                <option value="Bahasa Inggris">Bahasa Inggris</option>
+                <option value="Sejarah">Sejarah</option>
+                <option value="Geografi">Geografi</option>
+                <option value="Ekonomi">Ekonomi</option>
+                <option value="Sosiologi">Sosiologi</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Semester</label>
+                <select v-model.number="gradeForm.semester" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
+                  <option :value="1">Ganjil (1)</option>
+                  <option :value="2">Genap (2)</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Tahun Ajaran</label>
+                <select v-model="gradeForm.academic_year" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
+                  <option value="2024/2025">2024/2025</option>
+                  <option value="2025/2026">2025/2026</option>
+                  <option value="2026/2027">2026/2027</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Nilai Evaluasi (0 - 100)</label>
+              <input
+                v-model.number="gradeForm.score"
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                class="input w-full font-mono text-[color:var(--color-accent)] font-bold"
+                required
+                placeholder="Contoh: 85.5"
+              />
+            </div>
+
+            <div class="flex items-center space-x-2 pt-2 border-t border-[color:var(--color-border)]">
+              <button type="submit" :disabled="gradeLoading" class="button-primary text-xs font-semibold uppercase tracking-wider flex-1 flex items-center justify-center py-3">
+                <span v-if="gradeLoading" class="animate-spin rounded-full h-3 w-3 border-2 border-[color:var(--color-accent-fg)] border-t-transparent mr-2"></span>
+                <span>Simpan Nilai</span>
+              </button>
+              <button type="button" @click="closeGradeModal" class="button-ghost text-xs font-semibold uppercase tracking-wider py-3">
+                Batal
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -212,7 +298,9 @@ import { ref, onMounted, computed } from "vue"
 import { useRoute } from "vue-router"
 import {
   ChevronLeft as ChevronLeftIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  X as XIcon,
+  AlertCircle as AlertCircleIcon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 import StudentForm from "~/components/StudentForm.vue"
@@ -224,12 +312,25 @@ definePageMeta({
 const route = useRoute()
 const api = useApi()
 
+const currentUser = useState<any>("currentUser", () => null)
 const student = ref<any | null>(null)
 const grades = ref<any[]>([])
 const attendances = ref<any[]>([])
 const activeTab = ref("grades")
 const showForm = ref(false)
 const toastMessage = ref("")
+
+const showGradeModal = ref(false)
+const gradeLoading = ref(false)
+const gradeError = ref("")
+const selectedGradeId = ref<number | null>(null)
+
+const gradeForm = ref({
+  subject: "",
+  semester: 1,
+  academic_year: "2025/2026",
+  score: null as number | null
+})
 
 const studentId = computed(() => route.params.id as string)
 
@@ -245,6 +346,10 @@ const attendanceStats = computed(() => {
 })
 
 onMounted(() => {
+  const cached = localStorage.getItem("user")
+  if (cached && !currentUser.value) {
+    currentUser.value = JSON.parse(cached)
+  }
   loadAllData()
 })
 
@@ -331,6 +436,67 @@ function getStatusClass(status: string): string {
       return "text-[color:var(--color-error)] text-xs"
     default:
       return "text-[color:var(--color-text)] text-xs"
+  }
+}
+
+function openGradeModal(grade: any) {
+  selectedGradeId.value = grade.id
+  gradeForm.value = {
+    subject: grade.subject,
+    semester: grade.semester,
+    academic_year: grade.academic_year,
+    score: grade.score
+  }
+  gradeError.value = ""
+  showGradeModal.value = true
+}
+
+function closeGradeModal() {
+  showGradeModal.value = false
+  selectedGradeId.value = null
+  gradeError.value = ""
+}
+
+async function handleGradeSubmit() {
+  if (!gradeForm.value.subject || gradeForm.value.score === null || !gradeForm.value.academic_year) {
+    gradeError.value = "Semua kolom wajib diisi"
+    return
+  }
+
+  if (gradeForm.value.score < 0 || gradeForm.value.score > 100) {
+    gradeError.value = "Nilai harus berada di antara 0 dan 100"
+    return
+  }
+
+  gradeLoading.value = true
+  gradeError.value = ""
+
+  try {
+    const res: any = await api.put(`/api/grades/${selectedGradeId.value}`, {
+      score: gradeForm.value.score,
+      subject: gradeForm.value.subject,
+      semester: gradeForm.value.semester,
+      academic_year: gradeForm.value.academic_year
+    })
+
+    if (res.success) {
+      toastMessage.value = "Catatan nilai berhasil diperbarui"
+      closeGradeModal()
+      await fetchStudentGrades()
+      setTimeout(() => {
+        toastMessage.value = ""
+      }, 3000)
+    } else {
+      gradeError.value = res.message || "Gagal memperbarui data nilai"
+    }
+  } catch (error: any) {
+    if (error.response && error.response._data) {
+      gradeError.value = error.response._data.message || "Gagal memproses data"
+    } else {
+      gradeError.value = "Koneksi ke server terputus"
+    }
+  } finally {
+    gradeLoading.value = false
   }
 }
 </script>

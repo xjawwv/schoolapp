@@ -55,7 +55,6 @@ import {
   LayoutDashboard as LayoutDashboardIcon,
   Users as UsersIcon,
   CalendarCheck as CalendarCheckIcon,
-  Award as AwardIcon,
   Settings as SettingsIcon,
   User as UserIcon,
   X as XIcon
@@ -71,13 +70,11 @@ const menuGroups = computed(() => {
 
   const academicItems = (role === "siswa" || role === "siswi")
     ? [
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Nilai", path: "/grades", icon: AwardIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
       ]
     : [
         { label: "Data Siswa", path: "/students", icon: UsersIcon },
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Nilai", path: "/grades", icon: AwardIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
       ]
 
   const configItems = []

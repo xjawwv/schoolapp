@@ -151,10 +151,10 @@
           <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">
-                Siswa Baru Terdaftar
+                Presensi Hari Ini
               </h3>
-              <NuxtLink to="/students" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-85 font-semibold">
-                Lihat Semua Siswa
+              <NuxtLink to="/attendance" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-85 font-semibold">
+                Lihat Semua Presensi
               </NuxtLink>
             </div>
 
@@ -163,10 +163,10 @@
                 <thead>
                   <tr class="border-b border-[color:var(--color-border)]">
                     <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[18%]">NISN</th>
-                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Name</th>
-                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Class</th>
-                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[20%]">Gender</th>
-                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[22%]">Phone</th>
+                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[25%]">Nama</th>
+                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[15%]">Kelas</th>
+                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[20%]">Status</th>
+                    <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-[22%]">Keterangan</th>
                   </tr>
                 </thead>
               </table>
@@ -183,34 +183,50 @@
                 <table class="w-full text-left border-collapse">
                   <tbody>
                     <tr
-                      v-for="student in stats.recent_students"
-                      :key="'1-' + student.id"
+                      v-for="att in todayAttendancesList"
+                      :key="'1-' + att.id"
                       class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                     >
-                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ student.nis }}</td>
-                      <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">{{ student.name }}</td>
-                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ student.class }}</td>
-                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[20%]">{{ student.gender }}</td>
-                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono w-[22%]">{{ student.phone || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nis || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">
+                        <NuxtLink :to="`/students/${att.student?.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
+                          {{ att.student?.name || '-' }}
+                        </NuxtLink>
+                      </td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ att.student?.class || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider w-[20%]">
+                        <span :class="getStatusClass(att.status)">
+                          {{ att.status }}
+                        </span>
+                      </td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[22%] truncate" :title="att.note">{{ att.note || '-' }}</td>
                     </tr>
 
-                    <template v-if="stats.recent_students.length > 3">
+                    <template v-if="todayAttendancesList.length > 3">
                       <tr
-                        v-for="student in stats.recent_students"
-                        :key="'2-' + student.id"
+                        v-for="att in todayAttendancesList"
+                        :key="'2-' + att.id"
                         class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                       >
-                        <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ student.nis }}</td>
-                        <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">{{ student.name }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ student.class }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[20%]">{{ student.gender }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono w-[22%]">{{ student.phone || '-' }}</td>
+                        <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nis || '-' }}</td>
+                        <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">
+                          <NuxtLink :to="`/students/${att.student?.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
+                            {{ att.student?.name || '-' }}
+                          </NuxtLink>
+                        </td>
+                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[15%]">{{ att.student?.class || '-' }}</td>
+                        <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider w-[20%]">
+                          <span :class="getStatusClass(att.status)">
+                            {{ att.status }}
+                          </span>
+                        </td>
+                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] w-[22%] truncate" :title="att.note">{{ att.note || '-' }}</td>
                       </tr>
                     </template>
 
-                    <tr v-if="stats.recent_students.length === 0">
+                    <tr v-if="todayAttendancesList.length === 0">
                       <td colspan="5" class="py-8 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                        No new student data available
+                        Belum ada data presensi untuk hari ini
                       </td>
                     </tr>
                   </tbody>
@@ -264,6 +280,7 @@ const stats = ref<{
 const studentData = ref<any>(null)
 const todayAttendance = ref<any>(null)
 const studentGrades = ref<any[]>([])
+const todayAttendancesList = ref<any[]>([])
 
 const checkingIn = ref(false)
 const selectedStatus = ref("hadir")
@@ -304,7 +321,7 @@ function initAutoScroll() {
   const scroll = () => {
     if (isHovered.value) {
       currentScroll = el.scrollTop
-    } else if (stats.value.recent_students.length > 3) {
+    } else if (todayAttendancesList.value.length > 3) {
       currentScroll += scrollSpeed
       el.scrollTop = currentScroll
       const halfHeight = el.scrollHeight / 2
@@ -390,14 +407,24 @@ onMounted(async () => {
       const res: any = await api.get("/api/dashboard/stats")
       if (res.success && res.data) {
         stats.value = res.data
-        if (stats.value.recent_students.length > 3) {
+      }
+    } catch (error) {
+      console.error("Gagal memuat statistik dashboard", error)
+    }
+
+    try {
+      const todayStr = new Date().toISOString().split("T")[0]
+      const res: any = await api.get(`/api/attendances?date=${todayStr}`)
+      if (res.success && res.data) {
+        todayAttendancesList.value = res.data || []
+        if (todayAttendancesList.value.length > 3) {
           nextTick(() => {
             initAutoScroll()
           })
         }
       }
     } catch (error) {
-      console.error("Gagal memuat statistik dashboard", error)
+      console.error("Gagal memuat absensi hari ini", error)
     }
   }
 })
@@ -407,6 +434,21 @@ onUnmounted(() => {
     cancelAnimationFrame(animationFrameId)
   }
 })
+
+function getStatusClass(status: string): string {
+  switch (status.toLowerCase()) {
+    case "hadir":
+      return "text-[color:var(--color-success)] text-xs"
+    case "sakit":
+      return "text-orange-400 text-xs"
+    case "izin":
+      return "text-blue-400 text-xs"
+    case "alpha":
+      return "text-[color:var(--color-error)] text-xs"
+    default:
+      return "text-[color:var(--color-text)] text-xs"
+  }
+}
 </script>
 
 <style scoped>
