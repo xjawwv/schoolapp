@@ -4,7 +4,11 @@ export default defineNuxtConfig({
   css: [
     "~/assets/css/index.css"
   ],
-  modules: ["@nuxtjs/tailwindcss", "nuxt-headlessui"],
+  modules: ["@nuxtjs/tailwindcss", "nuxt-headlessui", "shadcn-nuxt"],
+  shadcn: {
+    prefix: "Ui",
+    componentDir: "./components/ui"
+  },
   vite: {
     server: {
       allowedHosts: ["tugasakhir-jawira.pplgtwo.my.id"]

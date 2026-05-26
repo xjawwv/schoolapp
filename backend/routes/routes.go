@@ -52,6 +52,9 @@ func SetupRouter(socketServer *socketio.Server) *gin.Engine {
 		protected := api.Group("/")
 		protected.Use(middleware.AuthMiddleware())
 		{
+			protected.GET("/notifications", controllers.GetNotifications)
+			protected.POST("/notifications", controllers.CreateNotification)
+			protected.DELETE("/notifications", controllers.ClearNotifications)
 			protected.GET("/students", controllers.GetStudents)
 			protected.GET("/students/:id", controllers.GetStudentByID)
 			protected.POST("/students", controllers.CreateStudent)

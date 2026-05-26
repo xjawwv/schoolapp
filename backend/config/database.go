@@ -48,7 +48,7 @@ func ConnectDB() {
 	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS student_id uuid;`)
 	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar varchar(255);`)
 
-	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{}, &models.Setting{})
+	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{}, &models.Setting{}, &models.Notification{})
 	if err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}

@@ -42,7 +42,7 @@
         </div>
       </nav>
       <div class="p-4 border-t border-[color:var(--color-border)] text-xs text-[color:var(--color-muted)] text-center tracking-wider uppercase">
-        V1.2.0
+        V1.3.1
       </div>
     </aside>
   </div>
@@ -58,7 +58,8 @@ import {
   Settings as SettingsIcon,
   User as UserIcon,
   GraduationCap as GraduationCapIcon,
-  X as XIcon
+  X as XIcon,
+  Bell as BellIcon
 } from "lucide-vue-next"
 
 const route = useRoute()
@@ -72,12 +73,14 @@ const menuGroups = computed(() => {
   const academicItems = (role === "siswa" || role === "siswi")
     ? [
         { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon }
+        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon },
+        { label: "Notifikasi", path: "/notification", icon: BellIcon }
       ]
     : [
         { label: "Data Siswa", path: "/students", icon: UsersIcon },
         { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon },
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
+        { label: "Notifikasi", path: "/notification", icon: BellIcon }
       ]
 
   const configItems = []

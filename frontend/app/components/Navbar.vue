@@ -122,6 +122,35 @@
       </div>
     </div>
   </header>
+
+  <div class="fixed top-4 right-4 z-[9999] flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
+    <transition-group
+      enter-active-class="transform ease-out duration-300 transition"
+      enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+      enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-for="toast in activeToasts"
+        :key="toast.id"
+        class="pointer-events-auto w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-950 p-4 shadow-2xl flex items-start space-x-3.5 text-left relative"
+      >
+        <BellIcon class="w-4 h-4 text-zinc-50 shrink-0 mt-0.5" />
+        <div class="flex-1 space-y-1">
+          <h5 class="text-sm font-semibold tracking-tight text-zinc-50 leading-none">Pemberitahuan Baru</h5>
+          <div class="text-xs text-zinc-400 font-normal leading-relaxed mt-1.5">{{ toast.message }}</div>
+        </div>
+        <button
+          @click="removeToast(toast.id)"
+          class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer self-start -mt-0.5 -mr-0.5 p-1 hover:bg-zinc-900 rounded-md"
+        >
+          <XIcon class="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </transition-group>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -132,10 +161,12 @@ import {
   Moon as MoonIcon,
   Menu as MenuIcon,
   ChevronDown as ChevronDownIcon,
-  Bell as BellIcon
+  Bell as BellIcon,
+  X as XIcon
 } from "lucide-vue-next"
 import { io } from "socket.io-client"
 
+const api = useApi()
 const user = useState<any>("currentUser", () => null)
 const config = useRuntimeConfig()
 const theme = ref("dark")
@@ -143,6 +174,7 @@ const isSidebarOpen = useState("sidebarOpen", () => false)
 
 const unreadCount = ref(0)
 const notifications = ref<Array<{ message: string; time: string }>>([])
+const activeToasts = ref<Array<{ id: string; message: string }>>([])
 
 let socket: any = null
 
@@ -151,6 +183,34 @@ const avatarUrl = computed(() => {
   if (user.value.avatar.startsWith("http")) return user.value.avatar
   return `${config.public.apiUrl}${user.value.avatar}`
 })
+
+function removeToast(id: string) {
+  activeToasts.value = activeToasts.value.filter((t) => t.id !== id)
+}
+
+function triggerToast(message: string) {
+  const id = Math.random().toString()
+  activeToasts.value.push({ id, message })
+  setTimeout(() => {
+    removeToast(id)
+  }, 5000)
+}
+
+async function fetchNotifications() {
+  try {
+    const res: any = await api.get("/api/notifications")
+    if (res.success && res.data) {
+      notifications.value = res.data.map((n: any) => {
+        const d = new Date(n.created_at)
+        const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
+        return { message: n.message, time: timeStr }
+      })
+      unreadCount.value = res.data.filter((n: any) => !n.is_read).length
+    }
+  } catch (error) {
+    console.error("Gagal memuat notifikasi", error)
+  }
+}
 
 onMounted(() => {
   const cached = localStorage.getItem("user")
@@ -163,6 +223,8 @@ onMounted(() => {
   document.documentElement.setAttribute("data-theme", cachedTheme)
 
   if (user.value && (user.value.role === 'admin' || user.value.role === 'guru')) {
+    fetchNotifications()
+
     const socketUrl = config.public.apiUrl || "http://localhost:8081"
     socket = io(socketUrl, {
       transports: ["websocket"]
@@ -173,6 +235,7 @@ onMounted(() => {
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
       notifications.value.unshift({ message: msg, time: timeStr })
       unreadCount.value++
+      triggerToast(msg)
     })
   }
 })
@@ -197,8 +260,13 @@ function logout() {
   navigateTo("/login")
 }
 
-function clearAll() {
+async function clearAll() {
   notifications.value = []
   unreadCount.value = 0
+  try {
+    await api.delete("/api/notifications")
+  } catch (error) {
+    console.error("Gagal membersihkan notifikasi di server", error)
+  }
 }
 </script>

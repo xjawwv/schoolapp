@@ -4,6 +4,9 @@ import (
 	"log"
 	"net/http"
 
+	"schoolapp/backend/config"
+	"schoolapp/backend/models"
+
 	socketio "github.com/googollee/go-socket.io"
 	"github.com/googollee/go-socket.io/engineio"
 	"github.com/googollee/go-socket.io/engineio/transport"
@@ -49,6 +52,14 @@ func InitSocketServer() *socketio.Server {
 }
 
 func BroadcastNotification(message string) {
+	notification := models.Notification{
+		Message: message,
+		IsRead:  false,
+	}
+	if config.DB != nil {
+		config.DB.Create(&notification)
+	}
+
 	if SocketServer != nil {
 		SocketServer.BroadcastToNamespace("/", "notification", message)
 	}
