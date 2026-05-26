@@ -35,7 +35,7 @@
                   type="text"
                   class="input w-full"
                   style="padding-left: 2.5rem !important;"
-                  placeholder="Cari berdasarkan nama, kelas, atau NIS..."
+                  placeholder="Cari berdasarkan nama, kelas, atau NISN..."
                 />
               </div>
               <select v-model="filterClass" class="input bg-[color:var(--color-bg)] select-arrow w-full md:w-40" @change="handleSearch">
@@ -70,7 +70,7 @@
                   class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                 >
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-muted)] font-semibold text-center font-mono w-12">{{ (currentPage - 1) * 10 + index + 1 }}</td>
-                  <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ student.nis }}</td>
+                  <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ student.nisn }}</td>
                   <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">
                     <NuxtLink :to="`/students/${student.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
                       {{ student.name }}

@@ -46,7 +46,7 @@
                   <select v-model="formData.student_id" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
                     <option value="" disabled>Pilih Siswa</option>
                     <option v-for="student in studentsList" :key="student.id" :value="student.id">
-                      {{ student.nis }} - {{ student.name }} ({{ student.class }})
+                      {{ student.nisn }} - {{ student.name }} ({{ student.class }})
                     </option>
                   </select>
                 </div>
@@ -141,7 +141,7 @@
                       :key="att.id"
                       class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                     >
-                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ att.student?.nis || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ att.student?.nisn || '-' }}</td>
                       <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">
                         <NuxtLink :to="`/students/${att.student?.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
                           {{ att.student?.name || '-' }}
@@ -311,7 +311,7 @@ function startEdit(record: any) {
   editingRecordId.value = record.id
   formData.value = {
     student_id: record.student_id,
-    student_name: `${record.student?.nis} - ${record.student?.name}`,
+    student_name: `${record.student?.nisn} - ${record.student?.name}`,
     date: record.date.split("T")[0],
     status: record.status,
     note: record.note || ""

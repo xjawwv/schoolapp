@@ -37,7 +37,7 @@
                   {{ student.name.charAt(0) }}
                 </div>
                 <div class="flex flex-col">
-                  <span class="text-sm font-semibold text-[color:var(--color-heading)]">NIS: {{ student.nis }}</span>
+                  <span class="text-sm font-semibold text-[color:var(--color-heading)]">NISN: {{ student.nisn }}</span>
                   <span class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">{{ student.class }}</span>
                 </div>
               </div>
@@ -93,7 +93,7 @@
               <div class="space-y-3 bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4 text-xs">
                 <div>
                   <span class="text-[color:var(--color-muted)] block uppercase font-bold mb-1">Username / NISN</span>
-                  <span class="font-mono text-sm text-[color:var(--color-heading)] font-semibold">{{ student.nis }}</span>
+                  <span class="font-mono text-sm text-[color:var(--color-heading)] font-semibold">{{ student.nisn }}</span>
                 </div>
                 <div>
                   <span class="text-[color:var(--color-muted)] block uppercase font-bold mb-1">Kata Sandi Bawaan</span>

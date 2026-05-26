@@ -26,7 +26,7 @@
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider block font-bold">NISN / Student ID</span>
-                <span class="text-md font-mono text-[color:var(--color-accent)] block">{{ studentData?.nis || '-' }}</span>
+                <span class="text-md font-mono text-[color:var(--color-accent)] block">{{ studentData?.nisn || '-' }}</span>
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider block font-bold">Kelas</span>
@@ -187,7 +187,7 @@
                       :key="'1-' + att.id"
                       class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                     >
-                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nis || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nisn || '-' }}</td>
                       <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">
                         <NuxtLink :to="`/students/${att.student?.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
                           {{ att.student?.name || '-' }}
@@ -208,7 +208,7 @@
                         :key="'2-' + att.id"
                         class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                       >
-                        <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nis || '-' }}</td>
+                        <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)] w-[18%]">{{ att.student?.nisn || '-' }}</td>
                         <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)] w-[25%]">
                           <NuxtLink :to="`/students/${att.student?.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
                             {{ att.student?.name || '-' }}
@@ -264,7 +264,7 @@ const stats = ref<{
   average_score: number
   recent_students: Array<{
     id: string
-    nis: string
+    nisn: string
     name: string
     class: string
     gender: string

@@ -18,8 +18,8 @@
       <form @submit.prevent="handleSubmit" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-1.5">
-            <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">NIS</label>
-            <input v-model="formData.nis" type="text" class="input w-full font-mono text-[color:var(--color-accent)]" required placeholder="Contoh: 10001" />
+            <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">NISN</label>
+            <input v-model="formData.nisn" type="text" class="input w-full font-mono text-[color:var(--color-accent)]" required placeholder="Contoh: 10001" />
           </div>
           <div class="space-y-1.5">
             <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Nama Lengkap</label>
@@ -90,7 +90,7 @@ const errorMessage = ref("")
 const isEdit = computed(() => !!props.student)
 
 const formData = ref({
-  nis: "",
+  nisn: "",
   name: "",
   class: "",
   gender: "",
@@ -103,7 +103,7 @@ watch(
   (newVal) => {
     if (newVal) {
       formData.value = {
-        nis: newVal.nis || "",
+        nisn: newVal.nisn || "",
         name: newVal.name || "",
         class: newVal.class || "",
         gender: newVal.gender || "",
@@ -112,7 +112,7 @@ watch(
       }
     } else {
       formData.value = {
-        nis: "",
+        nisn: "",
         name: "",
         class: "",
         gender: "",
@@ -126,8 +126,8 @@ watch(
 )
 
 async function handleSubmit() {
-  if (!formData.value.nis || !formData.value.name || !formData.value.class || !formData.value.gender) {
-    errorMessage.value = "Kolom NIS, Nama, Kelas, dan Gender wajib diisi"
+  if (!formData.value.nisn || !formData.value.name || !formData.value.class || !formData.value.gender) {
+    errorMessage.value = "Kolom NISN, Nama, Kelas, dan Gender wajib diisi"
     return
   }
 

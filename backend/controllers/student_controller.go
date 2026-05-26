@@ -14,7 +14,7 @@ import (
 )
 
 type StudentInput struct {
-	NIS     string `json:"nis" binding:"required"`
+	NISN    string `json:"nisn" binding:"required"`
 	Name    string `json:"name" binding:"required"`
 	Class   string `json:"class" binding:"required"`
 	Gender  string `json:"gender" binding:"required"`
@@ -42,7 +42,7 @@ func GetStudents(c *gin.Context) {
 
 	if search != "" {
 		searchTerm := "%" + search + "%"
-		query = query.Where("name ILIKE ? OR nis ILIKE ? OR class ILIKE ?", searchTerm, searchTerm, searchTerm)
+		query = query.Where("name ILIKE ? OR nisn ILIKE ? OR class ILIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
 	class := c.Query("class")
@@ -119,17 +119,17 @@ func CreateStudent(c *gin.Context) {
 	}
 
 	var existingStudent models.Student
-	if err := config.DB.Where("nis = ?", input.NIS).First(&existingStudent).Error; err == nil {
+	if err := config.DB.Where("nisn = ?", input.NISN).First(&existingStudent).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": "NIS is already in use by another student",
+			"message": "NISN is already in use by another student",
 		})
 		return
 	}
 
 	student := models.Student{
-		NIS:     input.NIS,
+		NISN:    input.NISN,
 		Name:    input.Name,
 		Class:   input.Class,
 		Gender:  input.Gender,
@@ -153,7 +153,7 @@ func CreateStudent(c *gin.Context) {
 	}
 	user := models.User{
 		Name:      student.Name,
-		Email:     "student_" + student.NIS + "@sekolah.com",
+		Email:     "student_" + student.NISN + "@sekolah.com",
 		Password:  string(hashedPassword),
 		Role:      role,
 		StudentID: &student.ID,
@@ -200,16 +200,16 @@ func UpdateStudent(c *gin.Context) {
 	}
 
 	var existingStudent models.Student
-	if err := config.DB.Where("nis = ? AND id != ?", input.NIS, id).First(&existingStudent).Error; err == nil {
+	if err := config.DB.Where("nisn = ? AND id != ?", input.NISN, id).First(&existingStudent).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": "NIS is already in use by another student",
+			"message": "NISN is already in use by another student",
 		})
 		return
 	}
 
-	student.NIS = input.NIS
+	student.NISN = input.NISN
 	student.Name = input.Name
 	student.Class = input.Class
 	student.Gender = input.Gender
@@ -228,7 +228,7 @@ func UpdateStudent(c *gin.Context) {
 	var user models.User
 	if err := config.DB.Where("student_id = ?", student.ID).First(&user).Error; err == nil {
 		user.Name = student.Name
-		user.Email = "student_" + student.NIS + "@sekolah.com"
+		user.Email = "student_" + student.NISN + "@sekolah.com"
 		role := "siswa"
 		if student.Gender == "Perempuan" {
 			role = "siswi"

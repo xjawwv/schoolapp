@@ -111,7 +111,7 @@ func Login(c *gin.Context) {
 		err = config.DB.Where("nip = ?", input.Email).First(&user).Error
 		if err != nil {
 			var student models.Student
-			err = config.DB.Where("nis = ?", input.Email).First(&student).Error
+			err = config.DB.Where("nisn = ?", input.Email).First(&student).Error
 			if err == nil {
 				err = config.DB.Where("student_id = ?", student.ID).First(&user).Error
 				if err != nil {
@@ -122,7 +122,7 @@ func Login(c *gin.Context) {
 					}
 					user = models.User{
 						Name:      student.Name,
-						Email:     "student_" + student.NIS + "@sekolah.com",
+						Email:     "student_" + student.NISN + "@sekolah.com",
 						Password:  string(hashedPassword),
 						Role:      role,
 						StudentID: &student.ID,

@@ -31,6 +31,19 @@ func ConnectDB() {
 
 	DB = database
 
+	DB.Exec(`
+		DO $$ 
+		BEGIN 
+			IF EXISTS (
+				SELECT 1 
+				FROM information_schema.columns 
+				WHERE table_name='students' AND column_name='nis'
+			) THEN
+				ALTER TABLE students RENAME COLUMN nis TO nisn;
+			END IF;
+		END $$;
+	`)
+
 	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS nip varchar(50);`)
 	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS student_id uuid;`)
 	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar varchar(255);`)
@@ -103,16 +116,16 @@ func seedData() {
 	DB.Model(&models.Student{}).Count(&studentCount)
 	if studentCount == 0 {
 		students := []models.Student{
-			{NIS: "10001", Name: "Ahmad Fauzi", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Merdeka No. 12", Phone: "081234567890"},
-			{NIS: "10002", Name: "Budi Santoso", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Mawar No. 4", Phone: "081234567891"},
-			{NIS: "10003", Name: "Citra Lestari", Class: "X-A", Gender: "Perempuan", Address: "Jl. Melati No. 8", Phone: "081234567892"},
-			{NIS: "10004", Name: "Dwi Cahyo", Class: "XI-B", Gender: "Laki-laki", Address: "Jl. Dahlia No. 15", Phone: "081234567893"},
-			{NIS: "10005", Name: "Eka Putri", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Anggrek No. 20", Phone: "081234567894"},
-			{NIS: "10006", Name: "Fitriani", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Tulip No. 3", Phone: "081234567895"},
-			{NIS: "10007", Name: "Gede Wahyu", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Cempaka No. 7", Phone: "081234567896"},
-			{NIS: "10008", Name: "Haryono", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Kamboja No. 9", Phone: "081234567897"},
-			{NIS: "10009", Name: "Indah Permata", Class: "XII-C", Gender: "Perempuan", Address: "Jl. Kenanga No. 2", Phone: "081234567898"},
-			{NIS: "10010", Name: "Joko Susilo", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Teratai No. 11", Phone: "081234567899"},
+			{NISN: "10001", Name: "Ahmad Fauzi", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Merdeka No. 12", Phone: "081234567890"},
+			{NISN: "10002", Name: "Budi Santoso", Class: "X-A", Gender: "Laki-laki", Address: "Jl. Mawar No. 4", Phone: "081234567891"},
+			{NISN: "10003", Name: "Citra Lestari", Class: "X-A", Gender: "Perempuan", Address: "Jl. Melati No. 8", Phone: "081234567892"},
+			{NISN: "10004", Name: "Dwi Cahyo", Class: "XI-B", Gender: "Laki-laki", Address: "Jl. Dahlia No. 15", Phone: "081234567893"},
+			{NISN: "10005", Name: "Eka Putri", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Anggrek No. 20", Phone: "081234567894"},
+			{NISN: "10006", Name: "Fitriani", Class: "XI-B", Gender: "Perempuan", Address: "Jl. Tulip No. 3", Phone: "081234567895"},
+			{NISN: "10007", Name: "Gede Wahyu", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Cempaka No. 7", Phone: "081234567896"},
+			{NISN: "10008", Name: "Haryono", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Kamboja No. 9", Phone: "081234567897"},
+			{NISN: "10009", Name: "Indah Permata", Class: "XII-C", Gender: "Perempuan", Address: "Jl. Kenanga No. 2", Phone: "081234567898"},
+			{NISN: "10010", Name: "Joko Susilo", Class: "XII-C", Gender: "Laki-laki", Address: "Jl. Teratai No. 11", Phone: "081234567899"},
 		}
 
 		for i := range students {
@@ -125,7 +138,7 @@ func seedData() {
 				}
 				user := models.User{
 					Name:      students[i].Name,
-					Email:     "student_" + students[i].NIS + "@sekolah.com",
+					Email:     "student_" + students[i].NISN + "@sekolah.com",
 					Password:  string(hashedPassword),
 					Role:      role,
 					StudentID: &students[i].ID,
