@@ -32,6 +32,24 @@ func GetNotifications(c *gin.Context) {
 	})
 }
 
+func GetNotificationByID(c *gin.Context) {
+	id := c.Param("id")
+	var notification models.Notification
+	err := config.DB.Where("id = ?", id).First(&notification).Error
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Notifikasi tidak ditemukan",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    notification,
+	})
+}
+
 func CreateNotification(c *gin.Context) {
 	role, exists := c.Get("role")
 	if !exists || role != "admin" {

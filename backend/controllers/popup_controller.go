@@ -32,6 +32,24 @@ func GetPopups(c *gin.Context) {
 	})
 }
 
+func GetPopupByID(c *gin.Context) {
+	id := c.Param("id")
+	var popup models.Popup
+	err := config.DB.Where("id = ?", id).First(&popup).Error
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Popup tidak ditemukan",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    popup,
+	})
+}
+
 func CreatePopup(c *gin.Context) {
 	role, exists := c.Get("role")
 	if !exists || role != "admin" {

@@ -54,9 +54,11 @@ func SetupRouter(socketServer *socketio.Server) *gin.Engine {
 		protected.Use(middleware.AuthMiddleware())
 		{
 			protected.GET("/notifications", controllers.GetNotifications)
+			protected.GET("/notifications/:id", controllers.GetNotificationByID)
 			protected.POST("/notifications", controllers.CreateNotification)
 			protected.DELETE("/notifications", controllers.ClearNotifications)
 			protected.GET("/popups", controllers.GetPopups)
+			protected.GET("/popups/:id", controllers.GetPopupByID)
 			protected.POST("/popups", controllers.CreatePopup)
 			protected.DELETE("/popups", controllers.ClearPopups)
 			protected.GET("/students", controllers.GetStudents)

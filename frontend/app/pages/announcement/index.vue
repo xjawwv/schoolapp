@@ -108,6 +108,7 @@
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-60">Judul</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Deskripsi</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-48">Waktu</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-28 text-center">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -122,9 +123,18 @@
                         <td class="py-3.5 px-4 text-xs text-[color:var(--color-muted)] font-mono">
                           {{ formatTime(n.created_at) }}
                         </td>
+                        <td class="py-3.5 px-4 text-center">
+                          <NuxtLink
+                            :to="`/announcement/notification/${n.id}`"
+                            class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] hover:text-[color:var(--color-heading)] transition duration-150 py-1.5 px-3 border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-accent)]/5"
+                          >
+                            <EyeIcon class="w-3.5 h-3.5" />
+                            <span>Detail</span>
+                          </NuxtLink>
+                        </td>
                       </tr>
                       <tr v-if="listNotifications.length === 0">
-                        <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                        <td colspan="5" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                           Belum ada riwayat notifikasi
                         </td>
                       </tr>
@@ -165,6 +175,7 @@
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-60">Judul</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-36">Gambar</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-48">Waktu</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold w-28 text-center">Aksi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -183,9 +194,18 @@
                         <td class="py-3.5 px-4 text-xs text-[color:var(--color-muted)] font-mono">
                           {{ formatTime(p.created_at) }}
                         </td>
+                        <td class="py-3.5 px-4 text-center">
+                          <NuxtLink
+                            :to="`/announcement/popup/${p.id}`"
+                            class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[color:var(--color-accent)] hover:text-[color:var(--color-heading)] transition duration-150 py-1.5 px-3 border border-[color:var(--color-border)] hover:border-[color:var(--color-accent)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-accent)]/5"
+                          >
+                            <EyeIcon class="w-3.5 h-3.5" />
+                            <span>Detail</span>
+                          </NuxtLink>
+                        </td>
                       </tr>
                       <tr v-if="listPopups.length === 0">
-                        <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                        <td colspan="5" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                           Belum ada riwayat popup visual
                         </td>
                       </tr>
@@ -208,7 +228,8 @@ import {
   CheckCircle as CheckCircleIcon,
   Plus as PlusIcon,
   Image as ImageIcon,
-  Trash2 as TrashIcon
+  Trash2 as TrashIcon,
+  Eye as EyeIcon
 } from "lucide-vue-next"
 import io from "socket.io-client"
 import { useApi } from "~/composables/useApi"
