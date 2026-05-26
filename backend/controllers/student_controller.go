@@ -180,7 +180,14 @@ func CreateStudent(c *gin.Context) {
 		Role:      role,
 		StudentID: &student.ID,
 	}
-	config.DB.Create(&user)
+	if errDb := config.DB.Create(&user).Error; errDb != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Gagal membuat akun pengguna siswa: " + errDb.Error(),
+		})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,

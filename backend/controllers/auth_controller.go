@@ -127,7 +127,14 @@ func Login(c *gin.Context) {
 						Role:      role,
 						StudentID: &student.ID,
 					}
-					config.DB.Create(&user)
+					if errDb := config.DB.Create(&user).Error; errDb != nil {
+						c.JSON(http.StatusInternalServerError, gin.H{
+							"success": false,
+							"data":    nil,
+							"message": "Gagal membuat akun autentikasi siswa: " + errDb.Error(),
+						})
+						return
+					}
 				}
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{

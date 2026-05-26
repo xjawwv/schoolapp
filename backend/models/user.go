@@ -16,7 +16,7 @@ type User struct {
 	StudentID    *uuid.UUID     `gorm:"type:uuid" json:"student_id,omitempty"`
 	Student      *Student       `gorm:"foreignKey:StudentID" json:"student,omitempty"`
 	Avatar       string         `gorm:"type:varchar(255)" json:"avatar"`
-	NIP          string         `gorm:"column:nip;type:varchar(50);uniqueIndex" json:"nip,omitempty"`
+	NIP          string         `gorm:"column:nip;type:varchar(50)" json:"nip,omitempty"`
 	PlaceOfBirth string         `gorm:"type:varchar(255)" json:"place_of_birth,omitempty"`
 	DateOfBirth  string         `gorm:"type:varchar(20)" json:"date_of_birth,omitempty"`
 	Gender       string         `gorm:"type:varchar(20)" json:"gender,omitempty"`
