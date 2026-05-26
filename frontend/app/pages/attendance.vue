@@ -96,9 +96,30 @@
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">
                   Daftar Absensi Harian
                 </h3>
-                <div class="flex items-center space-x-2 shrink-0">
-                  <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold">Filter Tanggal:</span>
-                  <input v-model="filterDate" type="date" class="input py-1 text-xs font-mono" @change="loadAttendanceList" />
+                <div class="flex flex-wrap items-center gap-3 shrink-0 w-full md:w-auto">
+                  <div class="relative w-full md:w-48" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
+                    <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[color:var(--color-muted)] pointer-events-none" />
+                    <input
+                      v-model="searchQuery"
+                      @input="handleSearch"
+                      type="text"
+                      class="input py-1 text-xs w-full"
+                      style="padding-left: 2.25rem !important;"
+                      placeholder="Cari nama/NISN..."
+                    />
+                  </div>
+
+                  <select v-model="filterClass" class="input py-1 text-xs bg-[color:var(--color-bg)] select-arrow w-full md:w-32" @change="loadAttendanceList" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
+                    <option value="">Semua Kelas</option>
+                    <option value="X-A">X-A</option>
+                    <option value="XI-B">XI-B</option>
+                    <option value="XII-C">XII-C</option>
+                  </select>
+
+                  <div class="flex items-center space-x-2 w-full md:w-auto">
+                    <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Filter Tanggal:</span>
+                    <input v-model="filterDate" type="date" class="input py-1 text-xs font-mono w-full md:w-auto" @change="loadAttendanceList" />
+                  </div>
                 </div>
               </div>
 
@@ -155,7 +176,8 @@
 import { ref, onMounted, watch } from "vue"
 import {
   AlertCircle as AlertCircleIcon,
-  CheckCircle as CheckCircleIcon
+  CheckCircle as CheckCircleIcon,
+  Search as SearchIcon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 
@@ -169,6 +191,17 @@ const currentUser = useState<any>("currentUser", () => null)
 const studentsList = ref<any[]>([])
 const attendancesList = ref<any[]>([])
 const filterDate = ref(new Date().toISOString().split("T")[0])
+const searchQuery = ref("")
+const filterClass = ref("")
+
+let debounceTimer: any = null
+
+function handleSearch() {
+  clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    loadAttendanceList()
+  }, 300)
+}
 const toastMessage = ref("")
 const errorMessage = ref("")
 const isLoading = ref(false)
@@ -214,7 +247,14 @@ async function loadStudents() {
 
 async function loadAttendanceList() {
   try {
-    const res: any = await api.get(`/api/attendances?date=${filterDate.value}`)
+    let url = `/api/attendances?date=${filterDate.value}`
+    if (filterClass.value) {
+      url += `&class=${filterClass.value}`
+    }
+    if (searchQuery.value) {
+      url += `&search=${searchQuery.value}`
+    }
+    const res: any = await api.get(url)
     if (res.success && res.data) {
       attendancesList.value = res.data || []
     }

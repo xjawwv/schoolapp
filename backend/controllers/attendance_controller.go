@@ -62,6 +62,23 @@ func GetAttendances(c *gin.Context) {
 		}
 	}
 
+	joinedStudent := false
+
+	class := c.Query("class")
+	if class != "" {
+		query = query.Joins("JOIN students ON students.id = attendances.student_id")
+		joinedStudent = true
+		query = query.Where("students.class = ?", class)
+	}
+
+	search := c.Query("search")
+	if search != "" {
+		if !joinedStudent {
+			query = query.Joins("JOIN students ON students.id = attendances.student_id")
+		}
+		query = query.Where("students.name ILIKE ? OR students.nis ILIKE ?", "%"+search+"%", "%"+search+"%")
+	}
+
 	err := query.Order("date DESC").Find(&attendances).Error
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
