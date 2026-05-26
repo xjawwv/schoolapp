@@ -132,23 +132,25 @@
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div
+      <UiAlert
         v-for="toast in activeToasts"
         :key="toast.id"
-        class="pointer-events-auto w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-950 p-4 shadow-2xl flex items-start space-x-3.5 text-left relative"
+        class="pointer-events-auto shadow-[--shadow-lg] flex items-start text-left relative backdrop-blur-sm"
       >
-        <BellIcon class="w-4 h-4 text-zinc-50 shrink-0 mt-0.5" />
-        <div class="flex-1 space-y-1">
-          <h5 class="text-sm font-semibold tracking-tight text-zinc-50 leading-none">Pemberitahuan Baru</h5>
-          <div class="text-xs text-zinc-400 font-normal leading-relaxed mt-1.5">{{ toast.message }}</div>
+        <BellIcon class="w-4 h-4 shrink-0 mt-0.5" />
+        <div class="flex-1">
+          <UiAlertTitle>Pemberitahuan Baru</UiAlertTitle>
+          <UiAlertDescription class="mt-1">
+            {{ toast.message }}
+          </UiAlertDescription>
         </div>
         <button
           @click="removeToast(toast.id)"
-          class="text-zinc-500 hover:text-zinc-300 transition cursor-pointer self-start -mt-0.5 -mr-0.5 p-1 hover:bg-zinc-900 rounded-md"
+          class="text-[color:var(--color-muted)] hover:text-[color:var(--color-heading)] transition cursor-pointer absolute right-4 top-4 p-1 hover:bg-[color:var(--color-bg)] rounded-md"
         >
           <XIcon class="w-3.5 h-3.5" />
         </button>
-      </div>
+      </UiAlert>
     </transition-group>
   </div>
 </template>
@@ -164,7 +166,7 @@ import {
   Bell as BellIcon,
   X as XIcon
 } from "lucide-vue-next"
-import { io } from "socket.io-client"
+import io from "socket.io-client"
 
 const api = useApi()
 const user = useState<any>("currentUser", () => null)
@@ -214,7 +216,7 @@ async function fetchNotifications() {
 
 onMounted(() => {
   const cached = localStorage.getItem("user")
-  if (cached && !user.value) {
+  if (cached) {
     user.value = JSON.parse(cached)
   }
 
@@ -222,12 +224,25 @@ onMounted(() => {
   theme.value = cachedTheme
   document.documentElement.setAttribute("data-theme", cachedTheme)
 
-  if (user.value && (user.value.role === 'admin' || user.value.role === 'guru')) {
+  const token = localStorage.getItem("token")
+  if (token) {
     fetchNotifications()
 
     const socketUrl = config.public.apiUrl || "http://localhost:8081"
     socket = io(socketUrl, {
       transports: ["websocket"]
+    })
+
+    socket.on("connect", () => {
+      console.log("Websocket connected to:", socketUrl)
+    })
+
+    socket.on("connect_error", (err: any) => {
+      console.error("Websocket connection error:", err)
+    })
+
+    socket.on("disconnect", (reason: string) => {
+      console.log("Websocket disconnected:", reason)
     })
 
     socket.on("notification", (msg: string) => {

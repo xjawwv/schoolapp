@@ -126,7 +126,7 @@ import {
   Send as SendIcon,
   Trash2 as TrashIcon
 } from "lucide-vue-next"
-import { io } from "socket.io-client"
+import io from "socket.io-client"
 import { useApi } from "~/composables/useApi"
 
 definePageMeta({
@@ -218,24 +218,39 @@ let socket: any = null
 
 onMounted(() => {
   const cached = localStorage.getItem("user")
-  if (cached && !currentUser.value) {
+  if (cached) {
     currentUser.value = JSON.parse(cached)
   }
   loadNotificationsList()
 
-  const config = useRuntimeConfig()
-  const socketUrl = config.public.apiUrl || "http://localhost:8081"
-  socket = io(socketUrl, {
-    transports: ["websocket"]
-  })
-
-  socket.on("notification", (msg: string) => {
-    listNotifications.value.unshift({
-      id: Math.random().toString(),
-      message: msg,
-      created_at: new Date().toISOString()
+  const token = localStorage.getItem("token")
+  if (token) {
+    const config = useRuntimeConfig()
+    const socketUrl = config.public.apiUrl || "http://localhost:8081"
+    socket = io(socketUrl, {
+      transports: ["websocket"]
     })
-  })
+
+    socket.on("connect", () => {
+      console.log("Websocket connected on notification page")
+    })
+
+    socket.on("connect_error", (err: any) => {
+      console.error("Websocket connection error on notification page:", err)
+    })
+
+    socket.on("disconnect", (reason: string) => {
+      console.log("Websocket disconnected on notification page:", reason)
+    })
+
+    socket.on("notification", (msg: string) => {
+      listNotifications.value.unshift({
+        id: Math.random().toString(),
+        message: msg,
+        created_at: new Date().toISOString()
+      })
+    })
+  }
 })
 
 onUnmounted(() => {

@@ -35,8 +35,9 @@ func SetupRouter(socketServer *socketio.Server) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(CORSMiddleware())
-	r.GET("/socket.io/*any", gin.WrapH(socketServer))
-	r.POST("/socket.io/*any", gin.WrapH(socketServer))
+	r.Any("/socket.io/*any", func(c *gin.Context) {
+		socketServer.ServeHTTP(c.Writer, c.Request)
+	})
 	r.Static("/uploads", "./uploads")
 
 	api := r.Group("/api")
