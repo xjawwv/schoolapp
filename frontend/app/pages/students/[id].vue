@@ -165,7 +165,23 @@
                 </div>
               </div>
 
-              <div v-if="activeTab === 'attendance'">
+              <div v-if="activeTab === 'attendance'" class="space-y-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[color:var(--color-border)]/50">
+                  <div>
+                    <h4 class="text-sm font-bold text-[color:var(--color-heading)] tracking-wide">Rekap Presensi</h4>
+                    <p class="text-[10px] text-[color:var(--color-muted)] uppercase tracking-wider mt-0.5">Filter riwayat presensi berkala</p>
+                  </div>
+                  <div class="flex items-center space-x-2 w-full sm:w-auto">
+                    <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Periode:</span>
+                    <select v-model="attendancePeriod" class="input py-1.5 px-3 text-xs bg-[color:var(--color-bg)] select-arrow w-full sm:w-44">
+                      <option value="minggu">1 Minggu Ini</option>
+                      <option value="bulan">1 Bulan Ini</option>
+                      <option value="semester">1 Semester Ini</option>
+                      <option value="semua">Semua Riwayat</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div class="overflow-x-auto">
                   <table class="w-full text-left border-collapse">
                     <thead>
@@ -178,7 +194,7 @@
                     </thead>
                     <tbody>
                       <tr
-                        v-for="att in attendances"
+                        v-for="att in paginatedAttendances"
                         :key="att.id"
                         class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                       >
@@ -199,13 +215,40 @@
                         </td>
                         <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
                       </tr>
-                      <tr v-if="attendances.length === 0">
+                      <tr v-if="paginatedAttendances.length === 0">
                         <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                           No attendance records found for this student
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+
+                <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[color:var(--color-border)]/50">
+                  <div class="text-[11px] text-[color:var(--color-muted)] font-semibold uppercase tracking-wider">
+                    Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredAttendances.length) }} dari {{ filteredAttendances.length }} riwayat
+                  </div>
+                  <div class="flex items-center space-x-1.5">
+                    <button
+                      type="button"
+                      :disabled="currentPage === 1"
+                      @click="currentPage--"
+                      class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <ChevronLeftIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                    </button>
+                    <span class="text-xs font-mono font-bold px-3 py-1.5 bg-[color:var(--color-surface)] border border-[color:var(--color-border)]">
+                      {{ currentPage }} / {{ totalPages }}
+                    </span>
+                    <button
+                      type="button"
+                      :disabled="currentPage === totalPages"
+                      @click="currentPage++"
+                      class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      <ChevronRightIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -304,10 +347,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, computed, watch } from "vue"
 import { useRoute } from "vue-router"
 import {
   ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
   CheckCircle as CheckCircleIcon,
   X as XIcon,
   AlertCircle as AlertCircleIcon
@@ -342,11 +386,79 @@ const gradeForm = ref({
   score: null as number | null
 })
 
+const attendancePeriod = ref("semua")
+const currentPage = ref(1)
+const itemsPerPage = 30
+
+watch(attendancePeriod, () => {
+  currentPage.value = 1
+})
+
 const studentId = computed(() => route.params.id as string)
+
+const filteredAttendances = computed(() => {
+  const period = attendancePeriod.value
+  if (period === "semua") return attendances.value
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  return attendances.value.filter((att) => {
+    if (!att.date) return false
+    const attDate = new Date(att.date)
+
+    if (period === "minggu") {
+      const currentDay = today.getDay()
+      const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - distanceToMonday)
+      monday.setHours(0, 0, 0, 0)
+      
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      sunday.setHours(23, 59, 59, 999)
+
+      return attDate >= monday && attDate <= sunday
+    }
+
+    if (period === "bulan") {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999)
+      return attDate >= startOfMonth && attDate <= endOfMonth
+    }
+
+    if (period === "semester") {
+      const currentMonth = today.getMonth()
+      let startOfSemester: Date
+      let endOfSemester: Date
+
+      if (currentMonth >= 6) {
+        startOfSemester = new Date(today.getFullYear(), 6, 1)
+        endOfSemester = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999)
+      } else {
+        startOfSemester = new Date(today.getFullYear(), 0, 1)
+        endOfSemester = new Date(today.getFullYear(), 5, 30, 23, 59, 59, 999)
+      }
+      return attDate >= startOfSemester && attDate <= endOfSemester
+    }
+
+    return true
+  })
+})
+
+const paginatedAttendances = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredAttendances.value.slice(start, end)
+})
+
+const totalPages = computed(() => {
+  return Math.ceil(filteredAttendances.value.length / itemsPerPage) || 1
+})
 
 const attendanceStats = computed(() => {
   const stats = { hadir: 0, sakit: 0, izin: 0, alpha: 0 }
-  attendances.value.forEach((att) => {
+  filteredAttendances.value.forEach((att) => {
     const s = att.status as keyof typeof stats
     if (stats[s] !== undefined) {
       stats[s]++
