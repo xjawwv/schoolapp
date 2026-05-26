@@ -18,6 +18,7 @@ type CreateUserInput struct {
 	Password  string     `json:"password" binding:"required,min=6"`
 	Role      string     `json:"role" binding:"required"`
 	StudentID *uuid.UUID `json:"student_id"`
+	NIP       string     `json:"nip"`
 }
 
 type UpdateUserInput struct {
@@ -25,6 +26,7 @@ type UpdateUserInput struct {
 	Email     string     `json:"email" binding:"required,email"`
 	Role      string     `json:"role" binding:"required"`
 	StudentID *uuid.UUID `json:"student_id"`
+	NIP       string     `json:"nip"`
 }
 
 func GetUsers(c *gin.Context) {
@@ -85,6 +87,24 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	if input.Role == "guru" && input.NIP == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "NIP wajib diisi untuk peran Guru",
+		})
+		return
+	}
+
+	if (input.Role == "siswa" || input.Role == "siswi") && input.StudentID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Biodata Siswa (NISN) wajib dihubungkan untuk peran Siswa/Siswi",
+		})
+		return
+	}
+
 	var existingUser models.User
 	if err := config.DB.Where("email = ?", input.Email).First(&existingUser).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{
@@ -111,6 +131,7 @@ func CreateUser(c *gin.Context) {
 		Password:  string(hashedPassword),
 		Role:      input.Role,
 		StudentID: input.StudentID,
+		NIP:       input.NIP,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -170,6 +191,24 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
+	if input.Role == "guru" && input.NIP == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "NIP wajib diisi untuk peran Guru",
+		})
+		return
+	}
+
+	if (input.Role == "siswa" || input.Role == "siswi") && input.StudentID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Biodata Siswa (NISN) wajib dihubungkan untuk peran Siswa/Siswi",
+		})
+		return
+	}
+
 	var user models.User
 	if err := config.DB.First(&user, userId).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -194,6 +233,7 @@ func UpdateUser(c *gin.Context) {
 	user.Email = input.Email
 	user.Role = input.Role
 	user.StudentID = input.StudentID
+	user.NIP = input.NIP
 
 	if err := config.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -331,5 +371,23 @@ func UploadAvatar(c *gin.Context) {
 			"avatar": avatarPath,
 		},
 		"message": "Foto profil berhasil diperbarui",
+	})
+}
+
+func GetTeachers(c *gin.Context) {
+	var teachers []models.User
+	if err := config.DB.Where("role = ?", "guru").Find(&teachers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Gagal mengambil data guru",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    teachers,
+		"message": "Daftar guru berhasil diambil",
 	})
 }

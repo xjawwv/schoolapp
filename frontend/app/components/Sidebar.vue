@@ -57,6 +57,7 @@ import {
   CalendarCheck as CalendarCheckIcon,
   Settings as SettingsIcon,
   User as UserIcon,
+  GraduationCap as GraduationCapIcon,
   X as XIcon
 } from "lucide-vue-next"
 
@@ -70,11 +71,13 @@ const menuGroups = computed(() => {
 
   const academicItems = (role === "siswa" || role === "siswi")
     ? [
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
+        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon }
       ]
     : [
         { label: "Data Siswa", path: "/students", icon: UsersIcon },
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
+        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon }
       ]
 
   const configItems = []
