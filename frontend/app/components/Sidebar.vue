@@ -80,6 +80,7 @@ const menuGroups = computed(() => {
   const configItems = []
   configItems.push({ label: "Profil", path: "/profile", icon: UserIcon })
   if (role === "admin") {
+    configItems.push({ label: "Pengguna", path: "/user", icon: UsersIcon })
     configItems.push({ label: "Setting", path: "/settings", icon: SettingsIcon })
   }
 
