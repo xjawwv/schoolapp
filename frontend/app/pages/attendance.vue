@@ -183,7 +183,8 @@
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">NISN</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Name</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Class</th>
-                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Date</th>
+                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tanggal</th>
+                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Waktu</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
                     </tr>
@@ -201,10 +202,13 @@
                         </NuxtLink>
                       </td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.student?.class || '-' }}</td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ formatDate(att.date) }}</td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">
-                        <div>{{ formatDate(att.date) }}</div>
-                        <div v-if="att.timestamp" class="text-[10px] text-[color:var(--color-muted)] mt-0.5">{{ att.timestamp.split(' ')[1] || att.timestamp }}</div>
-                        <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left">
+                        <div v-if="att.timestamp" class="font-semibold text-[color:var(--color-heading)]">
+                          {{ att.timestamp.split(' ')[1] || att.timestamp }}
+                        </div>
+                        <div v-else class="text-[color:var(--color-muted)]">-</div>
+                        <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left mt-0.5">
                           GPS: {{ att.latitude.toFixed(4) }}, {{ att.longitude.toFixed(4) }}
                         </div>
                       </td>
@@ -216,7 +220,7 @@
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
                     </tr>
                     <tr v-if="filteredAttendances.length === 0">
-                      <td colspan="6" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                      <td colspan="7" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                         Tidak ada catatan absensi dalam periode ini
                       </td>
                     </tr>
@@ -457,11 +461,16 @@ async function handleSubmit() {
   }
 
   const isStudent = currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi'
+  const now = new Date()
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  const timestampStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+
   const payload: any = {
     student_id: formData.value.student_id,
     date: formData.value.date,
     status: formData.value.status,
-    note: formData.value.note
+    note: formData.value.note,
+    timestamp: timestampStr
   }
 
   if (isStudent && formData.value.status === 'hadir') {
@@ -475,10 +484,6 @@ async function handleSubmit() {
     }
     payload.latitude = studentLatitude.value
     payload.longitude = studentLongitude.value
-    
-    const now = new Date()
-    const pad = (n: number) => n.toString().padStart(2, '0')
-    payload.timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
   }
 
   isLoading.value = true

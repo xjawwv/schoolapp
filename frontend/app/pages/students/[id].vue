@@ -170,7 +170,8 @@
                   <table class="w-full text-left border-collapse">
                     <thead>
                       <tr class="border-b border-[color:var(--color-border)]">
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Date</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tanggal</th>
+                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Waktu</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
                         <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
                       </tr>
@@ -182,6 +183,15 @@
                         class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                       >
                         <td class="py-3.5 px-4 text-sm text-[color:var(--color-heading)] font-mono">{{ formatDateOnly(att.date) }}</td>
+                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">
+                          <div v-if="att.timestamp" class="font-semibold text-[color:var(--color-heading)]">
+                            {{ att.timestamp.split(' ')[1] || att.timestamp }}
+                          </div>
+                          <div v-else class="text-[color:var(--color-muted)]">-</div>
+                          <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left mt-0.5">
+                            GPS: {{ att.latitude.toFixed(4) }}, {{ att.longitude.toFixed(4) }}
+                          </div>
+                        </td>
                         <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider">
                           <span :class="getStatusClass(att.status)">
                             {{ att.status }}
@@ -190,7 +200,7 @@
                         <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
                       </tr>
                       <tr v-if="attendances.length === 0">
-                        <td colspan="3" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                        <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                           No attendance records found for this student
                         </td>
                       </tr>
