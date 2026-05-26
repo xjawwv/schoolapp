@@ -7,6 +7,11 @@ export default defineNuxtConfig({
   modules: [
     "@nuxtjs/tailwindcss"
   ],
+  vite: {
+    server: {
+      allowedHosts: ["tugasakhir-jawira.pplgtwo.my.id"]
+    }
+  },
   runtimeConfig: {
     public: {
       apiUrl: process.env.VITE_API_URL || "http://localhost:8081"

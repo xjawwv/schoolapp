@@ -66,6 +66,50 @@
                   </select>
                 </div>
 
+                <div v-if="formData.status === 'hadir' && (currentUser?.role === 'siswa' || currentUser?.role === 'siswi')" class="bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4 space-y-3 text-xs leading-relaxed">
+                  <div class="font-bold text-[color:var(--color-heading)] uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
+                    <MapPinIcon class="w-3.5 h-3.5 text-[color:var(--color-accent)]" />
+                    <span>Verifikasi Lokasi Anti-Fake GPS</span>
+                  </div>
+
+                  <div v-if="gpsStatus === 'detecting'" class="flex items-center space-x-2 text-[color:var(--color-muted)]">
+                    <span class="animate-spin rounded-full h-3.5 w-3.5 border-2 border-[color:var(--color-accent)] border-t-transparent"></span>
+                    <span>Mendeteksi koordinat satelit GPS...</span>
+                  </div>
+
+                  <div v-else-if="gpsStatus === 'error'" class="text-[color:var(--color-error)] flex items-start space-x-1.5 font-medium">
+                    <AlertCircleIcon class="w-4 h-4 shrink-0 mt-0.5" />
+                    <div class="space-y-1">
+                      <p>{{ gpsErrorMsg }}</p>
+                      <button type="button" @click="getGPSLocation" class="text-[color:var(--color-accent)] hover:underline font-semibold cursor-pointer">
+                        Coba Lagi
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-else-if="gpsStatus === 'success'" class="space-y-2">
+                    <div class="flex items-start space-x-1.5 text-[color:var(--color-text)]">
+                      <div class="space-y-0.5 font-mono">
+                        <p>Latitude: {{ studentLatitude?.toFixed(6) }}</p>
+                        <p>Longitude: {{ studentLongitude?.toFixed(6) }}</p>
+                      </div>
+                    </div>
+
+                    <div v-if="distanceToSchool !== null && distanceToSchool <= 250" class="text-[color:var(--color-success)] font-medium flex items-center space-x-1.5 bg-emerald-500/5 border border-emerald-500/20 p-2">
+                      <CheckCircleIcon class="w-4 h-4 shrink-0" />
+                      <span>Lokasi Terverifikasi: {{ distanceToSchool }}m dari sekolah</span>
+                    </div>
+
+                    <div v-else class="text-[color:var(--color-error)] font-medium flex items-start space-x-1.5 bg-red-500/5 border border-red-500/20 p-2">
+                      <AlertCircleIcon class="w-4 h-4 shrink-0 mt-0.5" />
+                      <div class="space-y-1">
+                        <p>Jarak Anda terlalu jauh ({{ distanceToSchool }}m dari sekolah).</p>
+                        <p class="text-[10px] text-[color:var(--color-muted)] leading-relaxed">Anda harus berada di dalam radius maksimal 250m dari SMKN 1 KRAGILAN untuk melakukan absensi.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="space-y-1.5">
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Catatan / Keterangan</label>
                   <textarea
@@ -78,7 +122,7 @@
                 </div>
 
                 <div class="flex items-center space-x-2 pt-2">
-                  <button type="submit" :disabled="isLoading" class="button-primary text-xs font-semibold uppercase tracking-wider flex-1 flex items-center justify-center py-3">
+                  <button type="submit" :disabled="isLoading || (formData.status === 'hadir' && (currentUser?.role === 'siswa' || currentUser?.role === 'siswi') && (gpsStatus !== 'success' || (distanceToSchool !== null && distanceToSchool > 250)))" class="button-primary text-xs font-semibold uppercase tracking-wider flex-1 flex items-center justify-center py-3">
                     <span v-if="isLoading" class="animate-spin rounded-full h-3 w-3 border-2 border-[color:var(--color-accent-fg)] border-t-transparent mr-2"></span>
                     <span>{{ isEdit ? 'Perbarui Absensi' : 'Kirim Absensi' }}</span>
                   </button>
@@ -157,7 +201,13 @@
                         </NuxtLink>
                       </td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.student?.class || '-' }}</td>
-                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ formatDate(att.date) }}</td>
+                      <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">
+                        <div>{{ formatDate(att.date) }}</div>
+                        <div v-if="att.timestamp" class="text-[10px] text-[color:var(--color-muted)] mt-0.5">{{ att.timestamp.split(' ')[1] || att.timestamp }}</div>
+                        <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left">
+                          GPS: {{ att.latitude.toFixed(4) }}, {{ att.longitude.toFixed(4) }}
+                        </div>
+                      </td>
                       <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider">
                         <span :class="getStatusClass(att.status)">
                           {{ att.status }}
@@ -186,7 +236,8 @@ import { ref, onMounted, watch, computed } from "vue"
 import {
   AlertCircle as AlertCircleIcon,
   CheckCircle as CheckCircleIcon,
-  Search as SearchIcon
+  Search as SearchIcon,
+  MapPin as MapPinIcon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 
@@ -226,9 +277,80 @@ const formData = ref({
   note: ""
 })
 
+const gpsStatus = ref("")
+const gpsErrorMsg = ref("")
+const studentLatitude = ref<number | null>(null)
+const studentLongitude = ref<number | null>(null)
+const distanceToSchool = ref<number | null>(null)
+
+function calculateDistanceClient(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c * 1000
+}
+
+function getGPSLocation() {
+  gpsStatus.value = "detecting"
+  gpsErrorMsg.value = ""
+
+  if (!navigator.geolocation) {
+    gpsStatus.value = "error"
+    gpsErrorMsg.value = "Geolocation tidak didukung oleh browser Anda"
+    return
+  }
+
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      studentLatitude.value = position.coords.latitude
+      studentLongitude.value = position.coords.longitude
+      gpsStatus.value = "success"
+
+      const dist = calculateDistanceClient(position.coords.latitude, position.coords.longitude, -6.1822, 106.2736)
+      distanceToSchool.value = Math.round(dist)
+    },
+    (error) => {
+      gpsStatus.value = "error"
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          gpsErrorMsg.value = "Akses lokasi ditolak. Silakan izinkan akses lokasi di browser Anda"
+          break
+        case error.POSITION_UNAVAILABLE:
+          gpsErrorMsg.value = "Informasi lokasi tidak tersedia"
+          break
+        case error.TIMEOUT:
+          gpsErrorMsg.value = "Waktu pengambilan lokasi habis"
+          break
+        default:
+          gpsErrorMsg.value = "Gagal mengambil lokasi GPS"
+      }
+    },
+    options
+  )
+}
+
 watch(() => formData.value.status, (newStatus) => {
   if (newStatus === "hadir" || newStatus === "alpha") {
     formData.value.note = ""
+  }
+  if (newStatus === "hadir" && (currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi')) {
+    getGPSLocation()
+  } else {
+    gpsStatus.value = ""
+    gpsErrorMsg.value = ""
+    studentLatitude.value = null
+    studentLongitude.value = null
+    distanceToSchool.value = null
   }
 })
 
@@ -334,6 +456,31 @@ async function handleSubmit() {
     return
   }
 
+  const isStudent = currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi'
+  const payload: any = {
+    student_id: formData.value.student_id,
+    date: formData.value.date,
+    status: formData.value.status,
+    note: formData.value.note
+  }
+
+  if (isStudent && formData.value.status === 'hadir') {
+    if (gpsStatus.value !== 'success' || studentLatitude.value === null || studentLongitude.value === null) {
+      errorMessage.value = "Lokasi GPS wajib terverifikasi terlebih dahulu"
+      return
+    }
+    if (distanceToSchool.value !== null && distanceToSchool.value > 250) {
+      errorMessage.value = "Absensi ditolak karena Anda berada di luar radius area sekolah"
+      return
+    }
+    payload.latitude = studentLatitude.value
+    payload.longitude = studentLongitude.value
+    
+    const now = new Date()
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    payload.timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  }
+
   isLoading.value = true
   errorMessage.value = ""
 
@@ -345,12 +492,7 @@ async function handleSubmit() {
         note: formData.value.note
       })
     } else {
-      res = await api.post("/api/attendances", {
-        student_id: formData.value.student_id,
-        date: formData.value.date,
-        status: formData.value.status,
-        note: formData.value.note
-      })
+      res = await api.post("/api/attendances", payload)
     }
 
     if (res.success) {

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+	"math"
 	"net/http"
 	"time"
 
@@ -16,6 +18,9 @@ type AttendanceInput struct {
 	Date      string    `json:"date" binding:"required"`
 	Status    string    `json:"status" binding:"required"`
 	Note      string    `json:"note"`
+	Latitude  float64   `json:"latitude"`
+	Longitude float64   `json:"longitude"`
+	Timestamp string    `json:"timestamp"`
 }
 
 func GetAttendances(c *gin.Context) {
@@ -153,6 +158,31 @@ func InputAttendance(c *gin.Context) {
 			})
 			return
 		}
+
+		if input.Status == "hadir" {
+			if input.Latitude == 0 || input.Longitude == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"data":    nil,
+					"message": "Lokasi GPS diperlukan untuk status kehadiran Hadir",
+				})
+				return
+			}
+
+			const SchoolLat = -6.1822
+			const SchoolLon = 106.2736
+			const MaxDistanceMeters = 250.0
+
+			dist := calculateDistance(input.Latitude, input.Longitude, SchoolLat, SchoolLon)
+			if dist > MaxDistanceMeters {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"success": false,
+					"data":    nil,
+					"message": "Anda berada di luar jangkauan area sekolah (jarak Anda: " + fmt.Sprintf("%.1f", dist) + " meter). Absensi ditolak",
+				})
+				return
+			}
+		}
 	}
 
 	validStatuses := map[string]bool{"hadir": true, "sakit": true, "izin": true, "alpha": true}
@@ -180,6 +210,9 @@ func InputAttendance(c *gin.Context) {
 	if err == nil {
 		attendance.Status = input.Status
 		attendance.Note = input.Note
+		attendance.Latitude = input.Latitude
+		attendance.Longitude = input.Longitude
+		attendance.Timestamp = input.Timestamp
 		if err := config.DB.Save(&attendance).Error; err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"success": false,
@@ -204,6 +237,9 @@ func InputAttendance(c *gin.Context) {
 		Date:      parsedDate,
 		Status:    input.Status,
 		Note:      input.Note,
+		Latitude:  input.Latitude,
+		Longitude: input.Longitude,
+		Timestamp: input.Timestamp,
 	}
 
 	if err := config.DB.Create(&attendance).Error; err != nil {
@@ -290,4 +326,16 @@ func UpdateAttendance(c *gin.Context) {
 		"data":    attendance,
 		"message": "Attendance record updated successfully",
 	})
+}
+
+func calculateDistance(lat1, lon1, lat2, lon2 float64) float64 {
+	const EarthRadiusKm = 6371.0
+	dLat := (lat2 - lat1) * math.Pi / 180.0
+	dLon := (lon2 - lon1) * math.Pi / 180.0
+
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(lat1*math.Pi/180.0)*math.Cos(lat2*math.Pi/180.0)*
+			math.Sin(dLon/2)*math.Sin(dLon/2)
+	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+	return EarthRadiusKm * c * 1000.0
 }
