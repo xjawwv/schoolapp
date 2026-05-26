@@ -86,7 +86,7 @@
               </div>
             </div>
 
-            <div class="card space-y-4 shadow-[--shadow-sm]">
+            <div class="card space-y-4 shadow-[--shadow-sm]" v-if="currentUser?.role === 'admin'">
               <h3 class="text-xs uppercase tracking-widest text-[color:var(--color-accent)] font-bold">
                 Kredensial Akses
               </h3>
