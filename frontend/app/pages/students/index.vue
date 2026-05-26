@@ -13,10 +13,10 @@
               Data Siswa Terdaftar
             </h1>
           </div>
-          <button v-if="currentUser?.role === 'admin'" @click="openCreateModal" class="button-primary flex items-center space-x-2 self-start md:self-auto py-3">
+          <NuxtLink v-if="currentUser?.role === 'admin'" to="/students/create" class="button-primary flex items-center space-x-2 self-start md:self-auto py-3">
             <PlusIcon class="w-4 h-4" />
             <span>Tambah Siswa</span>
-          </button>
+          </NuxtLink>
         </div>
 
         <div v-if="toastMessage" class="bg-[color:var(--color-surface)] border border-[color:var(--color-success)] p-3 text-sm text-[color:var(--color-success)] font-medium flex items-center space-x-2">
@@ -267,11 +267,6 @@ function changePage(page: number) {
     currentPage.value = page
     fetchStudents()
   }
-}
-
-function openCreateModal() {
-  selectedStudent.value = null
-  showForm.value = true
 }
 
 function openEditModal(student: any) {

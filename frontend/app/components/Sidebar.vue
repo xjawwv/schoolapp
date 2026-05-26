@@ -76,8 +76,8 @@ const menuGroups = computed(() => {
       ]
     : [
         { label: "Data Siswa", path: "/students", icon: UsersIcon },
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon }
+        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon },
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
       ]
 
   const configItems = []

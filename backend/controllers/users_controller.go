@@ -1,9 +1,12 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
+
 	"schoolapp/backend/config"
 	"schoolapp/backend/models"
 
@@ -13,20 +16,45 @@ import (
 )
 
 type CreateUserInput struct {
-	Name      string     `json:"name" binding:"required"`
-	Email     string     `json:"email" binding:"required,email"`
-	Password  string     `json:"password" binding:"required,min=6"`
-	Role      string     `json:"role" binding:"required"`
-	StudentID *uuid.UUID `json:"student_id"`
-	NIP       string     `json:"nip"`
+	Name         string     `json:"name" binding:"required"`
+	Email        string     `json:"email" binding:"required,email"`
+	Password     string     `json:"password"`
+	Role         string     `json:"role" binding:"required"`
+	StudentID    *uuid.UUID `json:"student_id"`
+	NIP          string     `json:"nip"`
+	PlaceOfBirth string     `json:"place_of_birth"`
+	DateOfBirth  string     `json:"date_of_birth"`
+	Gender       string     `json:"gender"`
+	Address      string     `json:"address"`
+	WhatsApp     string     `json:"whatsapp"`
 }
 
 type UpdateUserInput struct {
-	Name      string     `json:"name" binding:"required"`
-	Email     string     `json:"email" binding:"required,email"`
-	Role      string     `json:"role" binding:"required"`
-	StudentID *uuid.UUID `json:"student_id"`
-	NIP       string     `json:"nip"`
+	Name         string     `json:"name" binding:"required"`
+	Email        string     `json:"email" binding:"required,email"`
+	Role         string     `json:"role" binding:"required"`
+	StudentID    *uuid.UUID `json:"student_id"`
+	NIP          string     `json:"nip"`
+	PlaceOfBirth string     `json:"place_of_birth"`
+	DateOfBirth  string     `json:"date_of_birth"`
+	Gender       string     `json:"gender"`
+	Address      string     `json:"address"`
+	WhatsApp     string     `json:"whatsapp"`
+}
+
+func generateTeacherPassword(dateOfBirth string, nip string) string {
+	yearPart := "00"
+	if len(dateOfBirth) >= 4 {
+		year := strings.Split(dateOfBirth, "-")[0]
+		if len(year) >= 4 {
+			yearPart = year[len(year)-2:]
+		}
+	}
+	nip2 := "00"
+	if len(nip) >= 2 {
+		nip2 = nip[len(nip)-2:]
+	}
+	return fmt.Sprintf("GURU%s%s", yearPart, nip2)
 }
 
 func GetUsers(c *gin.Context) {
@@ -115,7 +143,20 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	password := input.Password
+	if input.Role == "guru" {
+		password = generateTeacherPassword(input.DateOfBirth, input.NIP)
+	}
+	if password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Password wajib diisi",
+		})
+		return
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success": false,
@@ -126,12 +167,17 @@ func CreateUser(c *gin.Context) {
 	}
 
 	user := models.User{
-		Name:      input.Name,
-		Email:     input.Email,
-		Password:  string(hashedPassword),
-		Role:      input.Role,
-		StudentID: input.StudentID,
-		NIP:       input.NIP,
+		Name:         input.Name,
+		Email:        input.Email,
+		Password:     string(hashedPassword),
+		Role:         input.Role,
+		StudentID:    input.StudentID,
+		NIP:          input.NIP,
+		PlaceOfBirth: input.PlaceOfBirth,
+		DateOfBirth:  input.DateOfBirth,
+		Gender:       input.Gender,
+		Address:      input.Address,
+		WhatsApp:     input.WhatsApp,
 	}
 
 	if err := config.DB.Create(&user).Error; err != nil {
@@ -234,6 +280,11 @@ func UpdateUser(c *gin.Context) {
 	user.Role = input.Role
 	user.StudentID = input.StudentID
 	user.NIP = input.NIP
+	user.PlaceOfBirth = input.PlaceOfBirth
+	user.DateOfBirth = input.DateOfBirth
+	user.Gender = input.Gender
+	user.Address = input.Address
+	user.WhatsApp = input.WhatsApp
 
 	if err := config.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -391,3 +442,33 @@ func GetTeachers(c *gin.Context) {
 		"message": "Daftar guru berhasil diambil",
 	})
 }
+
+func GetTeacherByID(c *gin.Context) {
+	idStr := c.Param("id")
+	teacherId, err := uuid.Parse(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Format ID guru tidak valid",
+		})
+		return
+	}
+
+	var teacher models.User
+	if err := config.DB.Where("id = ? AND role = ?", teacherId, "guru").First(&teacher).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Data guru tidak ditemukan",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    teacher,
+		"message": "Data guru berhasil diambil",
+	})
+}
+

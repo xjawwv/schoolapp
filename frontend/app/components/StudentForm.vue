@@ -1,9 +1,9 @@
 <template>
   <div v-if="show" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-    <div class="w-full max-w-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] border-l-4 border-l-[color:var(--color-accent)] p-8 shadow-[--shadow-lg] relative">
+    <div class="w-full max-w-2xl bg-[color:var(--color-surface)] border border-[color:var(--color-border)] border-l-4 border-l-[color:var(--color-accent)] p-8 shadow-[--shadow-lg] relative max-h-[90vh] overflow-y-auto">
       <div class="mb-6">
         <h3 class="text-2xl font-bold text-[color:var(--color-heading)] tracking-tight">
-          {{ isEdit ? 'Ubah Data Siswa' : 'Tambah Siswa Baru' }}
+          Ubah Data Siswa
         </h3>
         <p class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] mt-1">
           Lengkapi semua kolom formulir di bawah ini
@@ -24,6 +24,17 @@
           <div class="space-y-1.5">
             <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Nama Lengkap</label>
             <input v-model="formData.name" type="text" class="input w-full" required placeholder="Contoh: Ahmad Fauzi" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Tempat Lahir</label>
+            <input v-model="formData.place_of_birth" type="text" class="input w-full" placeholder="Contoh: Jakarta" />
+          </div>
+          <div class="space-y-1.5">
+            <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Tanggal Lahir</label>
+            <input v-model="formData.date_of_birth" type="date" class="input w-full" />
           </div>
         </div>
 
@@ -50,11 +61,6 @@
         <div class="space-y-1.5">
           <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Alamat Rumah</label>
           <textarea v-model="formData.address" class="input w-full h-20 resize-none" placeholder="Alamat lengkap tempat tinggal siswa"></textarea>
-        </div>
-
-        <div class="bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-3.5 text-xs text-[color:var(--color-text)] space-y-1 leading-relaxed">
-          <div class="font-bold text-[color:var(--color-heading)] uppercase tracking-wider text-[10px]">Informasi Akun Login</div>
-          <p>Penyimpanan data ini otomatis membuat/memperbarui akun portal siswa dengan Username = NISN dan kata sandi default "1".</p>
         </div>
 
         <div class="flex items-center justify-end space-x-3 pt-4 border-t border-[color:var(--color-border)]">
@@ -92,6 +98,8 @@ const isEdit = computed(() => !!props.student)
 const formData = ref({
   nisn: "",
   name: "",
+  place_of_birth: "",
+  date_of_birth: "",
   class: "",
   gender: "",
   address: "",
@@ -105,6 +113,8 @@ watch(
       formData.value = {
         nisn: newVal.nisn || "",
         name: newVal.name || "",
+        place_of_birth: newVal.place_of_birth || "",
+        date_of_birth: newVal.date_of_birth || "",
         class: newVal.class || "",
         gender: newVal.gender || "",
         address: newVal.address || "",
@@ -114,6 +124,8 @@ watch(
       formData.value = {
         nisn: "",
         name: "",
+        place_of_birth: "",
+        date_of_birth: "",
         class: "",
         gender: "",
         address: "",

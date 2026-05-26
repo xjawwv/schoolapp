@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"math"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"schoolapp/backend/config"
 	"schoolapp/backend/models"
@@ -14,12 +16,29 @@ import (
 )
 
 type StudentInput struct {
-	NISN    string `json:"nisn" binding:"required"`
-	Name    string `json:"name" binding:"required"`
-	Class   string `json:"class" binding:"required"`
-	Gender  string `json:"gender" binding:"required"`
-	Address string `json:"address"`
-	Phone   string `json:"phone"`
+	NISN         string `json:"nisn" binding:"required"`
+	Name         string `json:"name" binding:"required"`
+	Class        string `json:"class" binding:"required"`
+	Gender       string `json:"gender" binding:"required"`
+	PlaceOfBirth string `json:"place_of_birth"`
+	DateOfBirth  string `json:"date_of_birth"`
+	Address      string `json:"address"`
+	Phone        string `json:"phone"`
+}
+
+func generateStudentPassword(dateOfBirth string, nisn string) string {
+	yearPart := "00"
+	if len(dateOfBirth) >= 4 {
+		year := strings.Split(dateOfBirth, "-")[0]
+		if len(year) >= 4 {
+			yearPart = year[len(year)-2:]
+		}
+	}
+	nisn2 := "00"
+	if len(nisn) >= 2 {
+		nisn2 = nisn[len(nisn)-2:]
+	}
+	return fmt.Sprintf("SISWA%s%s", yearPart, nisn2)
 }
 
 func GetStudents(c *gin.Context) {
@@ -129,12 +148,14 @@ func CreateStudent(c *gin.Context) {
 	}
 
 	student := models.Student{
-		NISN:    input.NISN,
-		Name:    input.Name,
-		Class:   input.Class,
-		Gender:  input.Gender,
-		Address: input.Address,
-		Phone:   input.Phone,
+		NISN:         input.NISN,
+		Name:         input.Name,
+		Class:        input.Class,
+		Gender:       input.Gender,
+		PlaceOfBirth: input.PlaceOfBirth,
+		DateOfBirth:  input.DateOfBirth,
+		Address:      input.Address,
+		Phone:        input.Phone,
 	}
 
 	if err := config.DB.Create(&student).Error; err != nil {
@@ -146,7 +167,8 @@ func CreateStudent(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("1"), bcrypt.DefaultCost)
+	defaultPwd := generateStudentPassword(input.DateOfBirth, input.NISN)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(defaultPwd), bcrypt.DefaultCost)
 	role := "siswa"
 	if student.Gender == "Perempuan" {
 		role = "siswi"
@@ -213,6 +235,8 @@ func UpdateStudent(c *gin.Context) {
 	student.Name = input.Name
 	student.Class = input.Class
 	student.Gender = input.Gender
+	student.PlaceOfBirth = input.PlaceOfBirth
+	student.DateOfBirth = input.DateOfBirth
 	student.Address = input.Address
 	student.Phone = input.Phone
 

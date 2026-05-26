@@ -64,6 +64,7 @@ func SetupRouter() *gin.Engine {
 			protected.DELETE("/users/:id", controllers.DeleteUser)
 			protected.POST("/profile/avatar", controllers.UploadAvatar)
 			protected.GET("/teachers", controllers.GetTeachers)
+			protected.GET("/teachers/:id", controllers.GetTeacherByID)
 
 			protected.GET("/dashboard/stats", controllers.GetDashboardStats)
 
