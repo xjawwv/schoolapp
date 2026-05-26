@@ -31,6 +31,10 @@ func ConnectDB() {
 
 	DB = database
 
+	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS nip varchar(50);`)
+	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS student_id uuid;`)
+	DB.Exec(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar varchar(255);`)
+
 	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{}, &models.Setting{})
 	if err != nil {
 		log.Fatal("Failed to run migrations:", err)
@@ -50,9 +54,8 @@ func seedData() {
 		DB.Create(&siteName)
 	}
 
-	var userCount int64
-	DB.Model(&models.User{}).Count(&userCount)
-	if userCount == 0 {
+	var admin models.User
+	if err := DB.Unscoped().Where("email = ?", "admin@sekolah.com").First(&admin).Error; err != nil {
 		hashedAdminPassword, errAdmin := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
 		if errAdmin == nil {
 			admin := models.User{
@@ -63,7 +66,26 @@ func seedData() {
 			}
 			DB.Create(&admin)
 		}
+	} else if !admin.DeletedAt.Time.IsZero() {
+		admin.DeletedAt = gorm.DeletedAt{}
+		DB.Unscoped().Save(&admin)
+	}
 
+	var guru models.User
+	if err := DB.Unscoped().Where("email = ?", "guru@sekolah.com").First(&guru).Error; err == nil {
+		var updated bool
+		if guru.NIP != "12345" {
+			guru.NIP = "12345"
+			updated = true
+		}
+		if !guru.DeletedAt.Time.IsZero() {
+			guru.DeletedAt = gorm.DeletedAt{}
+			updated = true
+		}
+		if updated {
+			DB.Unscoped().Save(&guru)
+		}
+	} else {
 		hashedGuruPassword, errGuru := bcrypt.GenerateFromPassword([]byte("gurusmk"), bcrypt.DefaultCost)
 		if errGuru == nil {
 			guru := models.User{
