@@ -69,7 +69,7 @@
                 <div v-if="formData.status === 'hadir' && (currentUser?.role === 'siswa' || currentUser?.role === 'siswi')" class="bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4 space-y-3 text-xs leading-relaxed">
                   <div class="font-bold text-[color:var(--color-heading)] uppercase tracking-wider text-[10px] flex items-center space-x-1.5">
                     <MapPinIcon class="w-3.5 h-3.5 text-[color:var(--color-accent)]" />
-                    <span>Verifikasi Lokasi Anti-Fake GPS</span>
+                    <span>Verifikasi Lokasi GPS</span>
                   </div>
 
                   <div v-if="gpsStatus === 'detecting'" class="flex items-center space-x-2 text-[color:var(--color-muted)]">
@@ -258,7 +258,6 @@ const schoolLongitude = ref(106.2736)
 const schoolMaxDistance = ref(250)
 const attendanceStartTime = ref("07:00")
 const attendanceEndTime = ref("17:00")
-const enableAntiFakeGPS = ref("true")
 
 const studentsList = ref<any[]>([])
 const attendancesList = ref<any[]>([])
@@ -324,24 +323,6 @@ function getGPSLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      if (enableAntiFakeGPS.value === "true") {
-        const isPatched = !/\{\s*\[native code\]\s*\}/.test(Function.prototype.toString.call(navigator.geolocation.getCurrentPosition)) ||
-                          !/\{\s*\[native code\]\s*\}/.test(Function.prototype.toString.call(navigator.geolocation.watchPosition))
-        const isMocked = (position as any).mocked === true ||
-                         (position.coords as any).mocked === true ||
-                         (position.coords as any).isFromMockProvider === true ||
-                         position.coords.accuracy === 0 ||
-                         isPatched
-        if (isMocked) {
-          gpsStatus.value = "error"
-          gpsErrorMsg.value = "Absensi ditolak: Terdeteksi penggunaan aplikasi/ekstensi Fake GPS atau Pemalsu Lokasi"
-          studentLatitude.value = null
-          studentLongitude.value = null
-          distanceToSchool.value = null
-          return
-        }
-      }
-
       studentLatitude.value = position.coords.latitude
       studentLongitude.value = position.coords.longitude
       gpsStatus.value = "success"
@@ -393,7 +374,6 @@ async function loadSchoolSettings() {
       schoolMaxDistance.value = parseInt(res.data.school_max_distance) || 250
       attendanceStartTime.value = res.data.attendance_start_time || "07:00"
       attendanceEndTime.value = res.data.attendance_end_time || "17:00"
-      enableAntiFakeGPS.value = res.data.enable_anti_fake_gps || "true"
     }
   } catch (error) {
     console.error("Gagal memuat konfigurasi absensi", error)
