@@ -11,7 +11,7 @@
         </button>
       </div>
       <div class="ml-4 flex items-center md:ml-6" v-if="user">
-        <HeadlessPopover class="relative mr-2" v-if="user.role === 'admin' || user.role === 'guru'">
+        <HeadlessPopover class="relative mr-2">
           <HeadlessPopoverButton
             class="p-2 text-[color:var(--color-muted)] hover:text-[color:var(--color-heading)] hover:bg-[color:var(--color-bg)] rounded-lg transition duration-150 cursor-pointer focus:outline-none relative"
           >

@@ -23,7 +23,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div class="lg:col-span-4" v-if="currentUser?.role === 'admin' || currentUser?.role === 'guru'">
+          <div class="lg:col-span-4" v-if="currentUser?.role === 'admin'">
             <div class="card space-y-6 shadow-[--shadow-sm]">
               <div>
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide mb-1">
@@ -56,7 +56,7 @@
             </div>
           </div>
 
-          <div :class="(currentUser?.role === 'admin' || currentUser?.role === 'guru') ? 'lg:col-span-8' : 'lg:col-span-12'">
+          <div :class="(currentUser?.role === 'admin') ? 'lg:col-span-8' : 'lg:col-span-12'">
             <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
               <div class="flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <div>

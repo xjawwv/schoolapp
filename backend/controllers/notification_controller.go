@@ -32,6 +32,15 @@ func GetNotifications(c *gin.Context) {
 }
 
 func CreateNotification(c *gin.Context) {
+	role, exists := c.Get("role")
+	if !exists || role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"message": "Anda tidak memiliki hak akses untuk menyiarkan notifikasi",
+		})
+		return
+	}
+
 	var input CreateNotificationInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
