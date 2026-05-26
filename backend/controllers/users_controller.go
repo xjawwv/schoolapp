@@ -381,6 +381,35 @@ func UploadAvatar(c *gin.Context) {
 		return
 	}
 
+	if file.Size > 5*1024*1024 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Ukuran file terlalu besar. Maksimum ukuran adalah 2MB",
+		})
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(file.Filename))
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".gif" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Format file tidak didukung. Hanya diperbolehkan JPG, JPEG, PNG, WEBP, atau GIF",
+		})
+		return
+	}
+
+	contentType := file.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "image/") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Tipe file tidak valid. File harus berupa gambar",
+		})
+		return
+	}
+
 	uploadDir := filepath.Join(".", "uploads", "avatars")
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -424,6 +453,50 @@ func UploadAvatar(c *gin.Context) {
 		"message": "Foto profil berhasil diperbarui",
 	})
 }
+
+func DeleteAvatar(c *gin.Context) {
+	currentUserIdStr, exists := c.Get("userId")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Sesi tidak valid",
+		})
+		return
+	}
+
+	var user models.User
+	if err := config.DB.First(&user, "id = ?", currentUserIdStr).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Pengguna tidak ditemukan",
+		})
+		return
+	}
+
+	if user.Avatar != "" && !strings.HasPrefix(user.Avatar, "http") {
+		oldFilePath := filepath.Join(".", user.Avatar)
+		_ = os.Remove(oldFilePath)
+	}
+
+	user.Avatar = ""
+	if err := config.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Gagal menghapus foto profil",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    nil,
+		"message": "Foto profil berhasil dihapus",
+	})
+}
+
 
 func GetTeachers(c *gin.Context) {
 	var teachers []models.User
@@ -471,4 +544,3 @@ func GetTeacherByID(c *gin.Context) {
 		"message": "Data guru berhasil diambil",
 	})
 }
-

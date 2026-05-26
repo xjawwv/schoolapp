@@ -5,10 +5,11 @@ export function useApi() {
 	const request = async (url: string, options: any = {}) => {
 		const token = typeof window !== "undefined" ? localStorage.getItem("token") : null
 
-		const headers = {
-			"Content-Type": "application/json",
-			...options.headers,
-		} as any
+		const headers = { ...options.headers } as any
+
+		if (!(options.body instanceof FormData)) {
+			headers["Content-Type"] = "application/json"
+		}
 
 		if (token) {
 			headers["Authorization"] = `Bearer ${token}`

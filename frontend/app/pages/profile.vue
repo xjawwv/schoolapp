@@ -35,7 +35,8 @@
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
               <div class="relative group cursor-pointer" @click="triggerFileInput">
                 <div class="w-24 h-24 rounded-full overflow-hidden border border-[color:var(--color-border)] bg-[color:var(--color-bg)] flex items-center justify-center relative">
-                  <img v-if="avatarUrl" :src="avatarUrl" class="w-full h-full object-cover" />
+                  <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover" />
+                  <img v-else-if="avatarUrl && !hasImageError" :src="avatarUrl" class="w-full h-full object-cover" @error="handleAvatarError" />
                   <UserIcon v-else class="w-10 h-10 text-[color:var(--color-muted)]" />
 
                   <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-150">
@@ -58,6 +59,25 @@
                   ]">
                     {{ currentUser?.role }}
                   </span>
+                </div>
+                <div class="pt-3 flex flex-wrap gap-2 justify-center sm:justify-start" v-if="previewUrl">
+                  <button @click="confirmUploadAvatar" :disabled="loading.upload" class="button-primary py-1.5 px-3 text-xs flex items-center space-x-1">
+                    <span v-if="loading.upload" class="animate-spin rounded-full h-3 w-3 border-2 border-[color:var(--color-accent-fg)] border-t-transparent mr-1"></span>
+                    <span>Simpan Foto</span>
+                  </button>
+                  <button @click="cancelPreview" class="button-ghost py-1.5 px-3 text-xs">
+                    <span>Batal</span>
+                  </button>
+                </div>
+                <div class="pt-3 flex flex-wrap gap-2 justify-center sm:justify-start" v-else>
+                  <button @click="triggerFileInput" class="button-ghost py-1.5 px-3 text-xs flex items-center space-x-1">
+                    <UploadIcon class="w-3.5 h-3.5" />
+                    <span>Ubah Foto</span>
+                  </button>
+                  <button v-if="currentUser?.avatar" @click="deleteAvatar" class="button-ghost py-1.5 px-3 text-xs text-[color:var(--color-error)] hover:bg-red-500/10 border-[color:var(--color-error)]/20 flex items-center space-x-1">
+                    <Trash2Icon class="w-3.5 h-3.5 text-[color:var(--color-error)]" />
+                    <span>Hapus Foto</span>
+                  </button>
                 </div>
               </div>
             </div>
@@ -140,7 +160,8 @@ import {
   CheckCircle as CheckCircleIcon,
   AlertCircle as AlertCircleIcon,
   User as UserIcon,
-  Upload as UploadIcon
+  Upload as UploadIcon,
+  Trash2 as Trash2Icon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 
@@ -159,7 +180,8 @@ const toast = ref<{ message: string; type: "success" | "error" }>({
 })
 
 const loading = ref({
-  password: false
+  password: false,
+  upload: false
 })
 
 const passwordForm = ref({
@@ -170,6 +192,66 @@ const passwordForm = ref({
 
 const currentUser = useState<any>("currentUser", () => null)
 const fileInput = ref<HTMLInputElement | null>(null)
+const hasImageError = ref(false)
+const selectedFile = ref<File | null>(null)
+const previewUrl = ref("")
+
+function cancelPreview() {
+  if (previewUrl.value) {
+    URL.revokeObjectURL(previewUrl.value)
+  }
+  previewUrl.value = ""
+  selectedFile.value = null
+}
+
+async function confirmUploadAvatar() {
+  if (!selectedFile.value) return
+
+  loading.value.upload = true
+  const formData = new FormData()
+  formData.append("avatar", selectedFile.value)
+
+  try {
+    const res: any = await api.post("/api/profile/avatar", formData)
+    if (res.success && res.data?.avatar) {
+      currentUser.value.avatar = res.data.avatar
+      hasImageError.value = false
+      localStorage.setItem("user", JSON.stringify(currentUser.value))
+      showToast("Foto profil berhasil diperbarui", "success")
+      cancelPreview()
+    } else {
+      showToast(res.message || "Gagal memperbarui foto profil", "error")
+    }
+  } catch (error: any) {
+    if (error.response && error.response._data) {
+      showToast(error.response._data.message || "Gagal memproses data", "error")
+    } else {
+      showToast("Koneksi ke server gagal", "error")
+    }
+  } finally {
+    loading.value.upload = false
+  }
+}
+
+function handleAvatarError() {
+  hasImageError.value = true
+}
+
+async function deleteAvatar() {
+  try {
+    const res: any = await api.delete("/api/profile/avatar")
+    if (res.success) {
+      currentUser.value.avatar = ""
+      hasImageError.value = false
+      localStorage.setItem("user", JSON.stringify(currentUser.value))
+      showToast("Foto profil berhasil dihapus", "success")
+    } else {
+      showToast(res.message || "Gagal menghapus foto profil", "error")
+    }
+  } catch (error: any) {
+    showToast(error.data?.message || "Koneksi ke server gagal", "error")
+  }
+}
 
 const avatarUrl = computed(() => {
   if (!currentUser.value?.avatar) return ""
@@ -188,28 +270,25 @@ function triggerFileInput() {
   fileInput.value?.click()
 }
 
-async function handleAvatarUpload(event: Event) {
+function handleAvatarUpload(event: Event) {
   const target = event.target as HTMLInputElement
   if (!target.files || target.files.length === 0) return
 
   const file = target.files[0]
   if (!file) return
 
-  const formData = new FormData()
-  formData.append("avatar", file)
-
-  try {
-    const res: any = await api.post("/api/profile/avatar", formData)
-    if (res.success && res.data?.avatar) {
-      currentUser.value.avatar = res.data.avatar
-      localStorage.setItem("user", JSON.stringify(currentUser.value))
-      showToast("Foto profil berhasil diperbarui", "success")
-    } else {
-      showToast(res.message || "Gagal memperbarui foto profil", "error")
-    }
-  } catch (error: any) {
-    showToast(error.data?.message || "Koneksi ke server gagal", "error")
+  if (file.size > 5 * 1024 * 1024) {
+    showToast("Ukuran file terlalu besar. Maksimum ukuran adalah 5MB", "error")
+    return
   }
+
+  if (!file.type.startsWith("image/")) {
+    showToast("Tipe file tidak valid. File harus berupa gambar", "error")
+    return
+  }
+
+  selectedFile.value = file
+  previewUrl.value = URL.createObjectURL(file)
 }
 
 onMounted(() => {

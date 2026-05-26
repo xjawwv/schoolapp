@@ -33,8 +33,9 @@
           <div class="lg:col-span-4 space-y-6">
             <div class="card space-y-6 shadow-[--shadow-sm]">
               <div class="flex items-center space-x-4 border-b border-[color:var(--color-border)] pb-4">
-                <div class="w-12 h-12 rounded-full bg-[color:var(--color-bg)] border border-[color:var(--color-accent)] flex items-center justify-center text-[color:var(--color-accent)] text-lg font-bold">
-                  {{ teacher.name.charAt(0) }}
+                <div class="w-12 h-12 rounded-full overflow-hidden border border-[color:var(--color-accent)] flex items-center justify-center bg-[color:var(--color-bg)]">
+                  <img v-if="teacher.avatar" :src="getAvatarUrl(teacher.avatar)" class="w-full h-full object-cover" />
+                  <span v-else class="text-[color:var(--color-accent)] text-lg font-bold">{{ teacher.name.charAt(0) }}</span>
                 </div>
                 <div class="flex flex-col">
                   <span class="text-sm font-semibold text-[color:var(--color-heading)]">NIP: {{ teacher.nip }}</span>
@@ -238,6 +239,13 @@ definePageMeta({
 const route = useRoute()
 const router = useRouter()
 const api = useApi()
+const config = useRuntimeConfig()
+
+function getAvatarUrl(path: string): string {
+  if (!path) return ""
+  if (path.startsWith("http")) return path
+  return `${config.public.apiUrl}${path}`
+}
 
 const currentUser = useState<any>("currentUser", () => null)
 const teacher = ref<any | null>(null)
