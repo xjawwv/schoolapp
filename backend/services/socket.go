@@ -51,16 +51,41 @@ func InitSocketServer() *socketio.Server {
 	return server
 }
 
-func BroadcastNotification(message string) {
+func BroadcastNotification(title string, description string) {
 	notification := models.Notification{
-		Message: message,
-		IsRead:  false,
+		Title:       title,
+		Description: description,
+		IsRead:      false,
 	}
 	if config.DB != nil {
 		config.DB.Create(&notification)
 	}
 
 	if SocketServer != nil {
-		SocketServer.BroadcastToNamespace("/", "notification", message)
+		SocketServer.BroadcastToNamespace("/", "notification", map[string]interface{}{
+			"id":          notification.ID,
+			"title":       notification.Title,
+			"description": notification.Description,
+			"created_at":  notification.CreatedAt,
+		})
+	}
+}
+
+func BroadcastPopup(title string, photo string) {
+	popup := models.Popup{
+		Title: title,
+		Photo: photo,
+	}
+	if config.DB != nil {
+		config.DB.Create(&popup)
+	}
+
+	if SocketServer != nil {
+		SocketServer.BroadcastToNamespace("/", "popup", map[string]interface{}{
+			"id":         popup.ID,
+			"title":      popup.Title,
+			"photo":      popup.Photo,
+			"created_at": popup.CreatedAt,
+		})
 	}
 }

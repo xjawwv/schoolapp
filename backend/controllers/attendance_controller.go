@@ -273,7 +273,7 @@ func InputAttendance(c *gin.Context) {
 
 		config.DB.Preload("Student").First(&attendance, attendance.ID)
 
-		services.BroadcastNotification(attendance.Student.Name + " melakukan absensi " + attendance.Status)
+		services.BroadcastNotification("Presensi Siswa", attendance.Student.Name + " melakukan absensi " + attendance.Status)
 
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
@@ -304,7 +304,7 @@ func InputAttendance(c *gin.Context) {
 
 	config.DB.Preload("Student").First(&attendance, attendance.ID)
 
-	services.BroadcastNotification(attendance.Student.Name + " melakukan absensi " + attendance.Status)
+	services.BroadcastNotification("Presensi Siswa", attendance.Student.Name + " melakukan absensi " + attendance.Status)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,

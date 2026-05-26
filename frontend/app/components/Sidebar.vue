@@ -73,14 +73,12 @@ const menuGroups = computed(() => {
   const academicItems = (role === "siswa" || role === "siswi")
     ? [
         { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon },
-        { label: "Notifikasi", path: "/notification", icon: BellIcon }
+        { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon }
       ]
     : [
         { label: "Data Siswa", path: "/students", icon: UsersIcon },
         { label: "Daftar Guru", path: "/teachers", icon: GraduationCapIcon },
-        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-        { label: "Notifikasi", path: "/notification", icon: BellIcon }
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon }
       ]
 
   const configItems = []
@@ -94,7 +92,8 @@ const menuGroups = computed(() => {
     {
       title: "Utama",
       items: [
-        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon }
+        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon },
+        { label: "Pengumuman", path: "/announcement", icon: BellIcon }
       ]
     },
     {

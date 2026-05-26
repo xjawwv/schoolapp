@@ -123,7 +123,7 @@
     </div>
   </header>
 
-  <div class="fixed top-4 right-4 z-[9999] flex flex-col space-y-3 max-w-sm w-full pointer-events-none">
+  <div class="fixed top-4 right-4 z-[9999] flex flex-col items-end space-y-3 pointer-events-none">
     <transition-group
       enter-active-class="transform ease-out duration-300 transition"
       enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
@@ -135,11 +135,11 @@
       <UiAlert
         v-for="toast in activeToasts"
         :key="toast.id"
-        class="pointer-events-auto shadow-[--shadow-lg] flex items-start text-left relative backdrop-blur-sm"
+        class="pointer-events-auto shadow-[--shadow-lg] flex items-start text-left relative backdrop-blur-sm w-[280px] sm:w-[380px]"
       >
         <BellIcon class="w-4 h-4 shrink-0 mt-0.5" />
         <div class="flex-1">
-          <UiAlertTitle>Pemberitahuan Baru</UiAlertTitle>
+          <UiAlertTitle>{{ toast.title }}</UiAlertTitle>
           <UiAlertDescription class="mt-1">
             {{ toast.message }}
           </UiAlertDescription>
@@ -153,6 +153,53 @@
       </UiAlert>
     </transition-group>
   </div>
+
+  <HeadlessDialog
+    :open="showPopupAnnouncement"
+    @close="showPopupAnnouncement = false"
+    class="relative z-[10000]"
+  >
+    <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" aria-hidden="true" />
+
+    <div class="fixed inset-0 flex items-center justify-center p-4">
+      <HeadlessDialogPanel
+        class="w-full max-w-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] border-l-4 border-l-[color:var(--color-accent)] shadow-2xl rounded-lg overflow-hidden p-6 flex flex-col space-y-4 relative text-left"
+      >
+        <button
+          @click="showPopupAnnouncement = false"
+          class="absolute top-4 right-4 text-[color:var(--color-muted)] hover:text-[color:var(--color-heading)] transition cursor-pointer p-1.5 hover:bg-[color:var(--color-bg)] rounded-md focus:outline-none"
+        >
+          <XIcon class="w-4 h-4" />
+        </button>
+
+        <div class="space-y-1">
+          <span class="text-[10px] font-bold text-[color:var(--color-accent)] tracking-widest uppercase">
+            Pengumuman Penting
+          </span>
+          <HeadlessDialogTitle class="text-xl font-black text-[color:var(--color-heading)] tracking-tight leading-tight">
+            {{ activePopup.title }}
+          </HeadlessDialogTitle>
+        </div>
+
+        <div class="rounded-md border border-[color:var(--color-border)] overflow-hidden w-full max-h-80 bg-black/20 flex items-center justify-center">
+          <img
+            v-if="activePopup.photo"
+            :src="activePopup.photo"
+            class="max-w-full max-h-80 object-contain"
+          />
+        </div>
+
+        <div class="pt-2 flex items-center justify-end">
+          <button
+            @click="showPopupAnnouncement = false"
+            class="button-primary text-xs py-2.5 px-5 font-semibold"
+          >
+            Tutup Pengumuman
+          </button>
+        </div>
+      </HeadlessDialogPanel>
+    </div>
+  </HeadlessDialog>
 </template>
 
 <script setup lang="ts">
@@ -176,7 +223,9 @@ const isSidebarOpen = useState("sidebarOpen", () => false)
 
 const unreadCount = ref(0)
 const notifications = ref<Array<{ message: string; time: string }>>([])
-const activeToasts = ref<Array<{ id: string; message: string }>>([])
+const activeToasts = ref<Array<{ id: string; title: string; message: string }>>([])
+const showPopupAnnouncement = ref(false)
+const activePopup = ref({ title: "", photo: "" })
 
 let socket: any = null
 
@@ -190,12 +239,18 @@ function removeToast(id: string) {
   activeToasts.value = activeToasts.value.filter((t) => t.id !== id)
 }
 
-function triggerToast(message: string) {
+function triggerToast(title: string, message: string) {
   const id = Math.random().toString()
-  activeToasts.value.push({ id, message })
+  activeToasts.value.push({ id, title, message })
   setTimeout(() => {
     removeToast(id)
   }, 5000)
+}
+
+function getPhotoUrl(photo: string): string {
+  if (!photo) return ""
+  if (photo.startsWith("http")) return photo
+  return `${config.public.apiUrl}${photo}`
 }
 
 async function fetchNotifications() {
@@ -205,7 +260,7 @@ async function fetchNotifications() {
       notifications.value = res.data.map((n: any) => {
         const d = new Date(n.created_at)
         const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
-        return { message: n.message, time: timeStr }
+        return { message: `${n.title}: ${n.description}`, time: timeStr }
       })
       unreadCount.value = res.data.filter((n: any) => !n.is_read).length
     }
@@ -245,12 +300,22 @@ onMounted(() => {
       console.log("Websocket disconnected:", reason)
     })
 
-    socket.on("notification", (msg: string) => {
+    socket.on("notification", (data: any) => {
       const now = new Date()
       const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
-      notifications.value.unshift({ message: msg, time: timeStr })
+      const title = data.title || "Pemberitahuan Baru"
+      const desc = data.description || (typeof data === "string" ? data : "")
+      notifications.value.unshift({ message: `${title}: ${desc}`, time: timeStr })
       unreadCount.value++
-      triggerToast(msg)
+      triggerToast(title, desc)
+    })
+
+    socket.on("popup", (data: any) => {
+      activePopup.value = {
+        title: data.title || "Pengumuman Visual Baru",
+        photo: data.photo ? getPhotoUrl(data.photo) : ""
+      }
+      showPopupAnnouncement.value = true
     })
   }
 })

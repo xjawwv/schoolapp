@@ -11,7 +11,8 @@ import (
 )
 
 type CreateNotificationInput struct {
-	Message string `json:"message" binding:"required"`
+	Title       string `json:"title" binding:"required"`
+	Description string `json:"description" binding:"required"`
 }
 
 func GetNotifications(c *gin.Context) {
@@ -45,14 +46,15 @@ func CreateNotification(c *gin.Context) {
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
-			"message": "Pesan notifikasi wajib diisi",
+			"message": "Judul dan deskripsi notifikasi wajib diisi",
 		})
 		return
 	}
 
 	notification := models.Notification{
-		Message: input.Message,
-		IsRead:  false,
+		Title:       input.Title,
+		Description: input.Description,
+		IsRead:      false,
 	}
 
 	err := config.DB.Create(&notification).Error
@@ -65,7 +67,12 @@ func CreateNotification(c *gin.Context) {
 	}
 
 	if services.SocketServer != nil {
-		services.SocketServer.BroadcastToNamespace("/", "notification", input.Message)
+		services.SocketServer.BroadcastToNamespace("/", "notification", map[string]interface{}{
+			"id":          notification.ID,
+			"title":       notification.Title,
+			"description": notification.Description,
+			"created_at":  notification.CreatedAt,
+		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
