@@ -42,7 +42,7 @@
         </div>
       </nav>
       <div class="p-4 border-t border-[color:var(--color-border)] text-xs text-[color:var(--color-muted)] text-center tracking-wider uppercase">
-        V1.0.2
+        V1.0.8
       </div>
     </aside>
   </div>

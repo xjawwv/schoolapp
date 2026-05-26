@@ -95,7 +95,7 @@
                       </div>
                     </div>
 
-                    <div v-if="distanceToSchool !== null && distanceToSchool <= 250" class="text-[color:var(--color-success)] font-medium flex items-center space-x-1.5 bg-emerald-500/5 border border-emerald-500/20 p-2">
+                    <div v-if="distanceToSchool !== null && distanceToSchool <= schoolMaxDistance" class="text-[color:var(--color-success)] font-medium flex items-center space-x-1.5 bg-emerald-500/5 border border-emerald-500/20 p-2">
                       <CheckCircleIcon class="w-4 h-4 shrink-0" />
                       <span>Lokasi Terverifikasi: {{ distanceToSchool }}m dari sekolah</span>
                     </div>
@@ -104,7 +104,7 @@
                       <AlertCircleIcon class="w-4 h-4 shrink-0 mt-0.5" />
                       <div class="space-y-1">
                         <p>Jarak Anda terlalu jauh ({{ distanceToSchool }}m dari sekolah).</p>
-                        <p class="text-[10px] text-[color:var(--color-muted)] leading-relaxed">Anda harus berada di dalam radius maksimal 250m dari SMKN 1 KRAGILAN untuk melakukan absensi.</p>
+                        <p class="text-[10px] text-[color:var(--color-muted)] leading-relaxed">Anda harus berada di dalam radius maksimal {{ schoolMaxDistance }}m dari {{ siteName }} untuk melakukan absensi.</p>
                       </div>
                     </div>
                   </div>
@@ -122,7 +122,7 @@
                 </div>
 
                 <div class="flex items-center space-x-2 pt-2">
-                  <button type="submit" :disabled="isLoading || (formData.status === 'hadir' && (currentUser?.role === 'siswa' || currentUser?.role === 'siswi') && (gpsStatus !== 'success' || (distanceToSchool !== null && distanceToSchool > 250)))" class="button-primary text-xs font-semibold uppercase tracking-wider flex-1 flex items-center justify-center py-3">
+                  <button type="submit" :disabled="isLoading || (formData.status === 'hadir' && (currentUser?.role === 'siswa' || currentUser?.role === 'siswi') && (gpsStatus !== 'success' || (distanceToSchool !== null && distanceToSchool > schoolMaxDistance)))" class="button-primary text-xs font-semibold uppercase tracking-wider flex-1 flex items-center justify-center py-3">
                     <span v-if="isLoading" class="animate-spin rounded-full h-3 w-3 border-2 border-[color:var(--color-accent-fg)] border-t-transparent mr-2"></span>
                     <span>{{ isEdit ? 'Perbarui Absensi' : 'Kirim Absensi' }}</span>
                   </button>
@@ -251,6 +251,13 @@ definePageMeta({
 
 const api = useApi()
 const currentUser = useState<any>("currentUser", () => null)
+const siteName = useState("siteName", () => "SMA N 1 METRO")
+
+const schoolLatitude = ref(-6.1822)
+const schoolLongitude = ref(106.2736)
+const schoolMaxDistance = ref(250)
+const attendanceStartTime = ref("07:00")
+const attendanceEndTime = ref("17:00")
 
 const studentsList = ref<any[]>([])
 const attendancesList = ref<any[]>([])
@@ -320,7 +327,7 @@ function getGPSLocation() {
       studentLongitude.value = position.coords.longitude
       gpsStatus.value = "success"
 
-      const dist = calculateDistanceClient(position.coords.latitude, position.coords.longitude, -6.1822, 106.2736)
+      const dist = calculateDistanceClient(position.coords.latitude, position.coords.longitude, schoolLatitude.value, schoolLongitude.value)
       distanceToSchool.value = Math.round(dist)
     },
     (error) => {
@@ -357,6 +364,21 @@ watch(() => formData.value.status, (newStatus) => {
     distanceToSchool.value = null
   }
 })
+
+async function loadSchoolSettings() {
+  try {
+    const res: any = await api.get("/api/settings")
+    if (res.success && res.data) {
+      schoolLatitude.value = parseFloat(res.data.school_latitude) || -6.1822
+      schoolLongitude.value = parseFloat(res.data.school_longitude) || 106.2736
+      schoolMaxDistance.value = parseInt(res.data.school_max_distance) || 250
+      attendanceStartTime.value = res.data.attendance_start_time || "07:00"
+      attendanceEndTime.value = res.data.attendance_end_time || "17:00"
+    }
+  } catch (error) {
+    console.error("Gagal memuat konfigurasi absensi", error)
+  }
+}
 
 const filteredAttendances = computed(() => {
   if (currentUser.value?.role !== 'siswa' && currentUser.value?.role !== 'siswi') {
@@ -417,6 +439,7 @@ onMounted(() => {
   if (currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi') {
     formData.value.student_id = currentUser.value.student_id
   }
+  loadSchoolSettings()
   loadStudents()
   loadAttendanceList()
 })
@@ -464,6 +487,12 @@ async function handleSubmit() {
   const now = new Date()
   const pad = (n: number) => n.toString().padStart(2, '0')
   const timestampStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  const nowTimeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`
+
+  if (isStudent && (nowTimeStr < attendanceStartTime.value || nowTimeStr > attendanceEndTime.value)) {
+    errorMessage.value = `Absensi ditolak: Waktu operasional absensi mandiri hanya diperbolehkan pukul ${attendanceStartTime.value} s.d. ${attendanceEndTime.value}`
+    return
+  }
 
   const payload: any = {
     student_id: formData.value.student_id,
@@ -478,7 +507,7 @@ async function handleSubmit() {
       errorMessage.value = "Lokasi GPS wajib terverifikasi terlebih dahulu"
       return
     }
-    if (distanceToSchool.value !== null && distanceToSchool.value > 250) {
+    if (distanceToSchool.value !== null && distanceToSchool.value > schoolMaxDistance.value) {
       errorMessage.value = "Absensi ditolak karena Anda berada di luar radius area sekolah"
       return
     }

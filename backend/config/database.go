@@ -73,6 +73,21 @@ func seedData() {
 		DB.Create(&siteName)
 	}
 
+	var settingsToCheck = []models.Setting{
+		{Key: "school_latitude", Value: "-6.1822"},
+		{Key: "school_longitude", Value: "106.2736"},
+		{Key: "school_max_distance", Value: "250"},
+		{Key: "attendance_start_time", Value: "07:00"},
+		{Key: "attendance_end_time", Value: "17:00"},
+	}
+	for _, s := range settingsToCheck {
+		var count int64
+		DB.Model(&models.Setting{}).Where("key = ?", s.Key).Count(&count)
+		if count == 0 {
+			DB.Create(&s)
+		}
+	}
+
 	var admin models.User
 	if err := DB.Unscoped().Where("email = ?", "admin@sekolah.com").First(&admin).Error; err != nil {
 		hashedAdminPassword, errAdmin := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)

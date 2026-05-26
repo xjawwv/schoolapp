@@ -16,10 +16,6 @@ type PasswordInput struct {
 	NewPassword string `json:"new_password" binding:"required,min=6"`
 }
 
-type SettingsInput struct {
-	SiteName string `json:"site_name" binding:"required"`
-}
-
 func GetSettings(c *gin.Context) {
 	var settings []models.Setting
 	if err := config.DB.Find(&settings).Error; err != nil {
@@ -44,7 +40,7 @@ func GetSettings(c *gin.Context) {
 }
 
 func UpdateSettings(c *gin.Context) {
-	var input SettingsInput
+	var input map[string]string
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -54,21 +50,21 @@ func UpdateSettings(c *gin.Context) {
 		return
 	}
 
-	var setting models.Setting
-	err := config.DB.Where("key = ?", "site_name").First(&setting).Error
-	if err != nil {
-		setting = models.Setting{Key: "site_name", Value: input.SiteName}
-		config.DB.Create(&setting)
-	} else {
-		setting.Value = input.SiteName
-		config.DB.Save(&setting)
+	for k, v := range input {
+		var setting models.Setting
+		err := config.DB.Where("key = ?", k).First(&setting).Error
+		if err != nil {
+			setting = models.Setting{Key: k, Value: v}
+			config.DB.Create(&setting)
+		} else {
+			setting.Value = v
+			config.DB.Save(&setting)
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"data": gin.H{
-			"site_name": input.SiteName,
-		},
+		"data":    input,
 		"message": "Pengaturan berhasil disimpan",
 	})
 }

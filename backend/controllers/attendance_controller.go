@@ -163,6 +163,28 @@ func InputAttendance(c *gin.Context) {
 			return
 		}
 
+		var startSetting models.Setting
+		startTimeStr := "07:00"
+		if err := config.DB.Where("key = ?", "attendance_start_time").First(&startSetting).Error; err == nil {
+			startTimeStr = startSetting.Value
+		}
+
+		var endSetting models.Setting
+		endTimeStr := "17:00"
+		if err := config.DB.Where("key = ?", "attendance_end_time").First(&endSetting).Error; err == nil {
+			endTimeStr = endSetting.Value
+		}
+
+		nowTimeStr := time.Now().Format("15:04")
+		if nowTimeStr < startTimeStr || nowTimeStr > endTimeStr {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Absensi ditolak: Waktu absensi mandiri hanya diizinkan pukul " + startTimeStr + " s.d. " + endTimeStr,
+			})
+			return
+		}
+
 		if input.Status == "hadir" {
 			if input.Latitude == 0 || input.Longitude == 0 {
 				c.JSON(http.StatusBadRequest, gin.H{
@@ -173,12 +195,26 @@ func InputAttendance(c *gin.Context) {
 				return
 			}
 
-			const SchoolLat = -6.1822
-			const SchoolLon = 106.2736
-			const MaxDistanceMeters = 250.0
+			var latSetting models.Setting
+			schoolLat := -6.1822
+			if err := config.DB.Where("key = ?", "school_latitude").First(&latSetting).Error; err == nil {
+				fmt.Sscanf(latSetting.Value, "%f", &schoolLat)
+			}
 
-			dist := calculateDistance(input.Latitude, input.Longitude, SchoolLat, SchoolLon)
-			if dist > MaxDistanceMeters {
+			var lonSetting models.Setting
+			schoolLon := 106.2736
+			if err := config.DB.Where("key = ?", "school_longitude").First(&lonSetting).Error; err == nil {
+				fmt.Sscanf(lonSetting.Value, "%f", &schoolLon)
+			}
+
+			var distSetting models.Setting
+			maxDistance := 250.0
+			if err := config.DB.Where("key = ?", "school_max_distance").First(&distSetting).Error; err == nil {
+				fmt.Sscanf(distSetting.Value, "%f", &maxDistance)
+			}
+
+			dist := calculateDistance(input.Latitude, input.Longitude, schoolLat, schoolLon)
+			if dist > maxDistance {
 				c.JSON(http.StatusBadRequest, gin.H{
 					"success": false,
 					"data":    nil,
