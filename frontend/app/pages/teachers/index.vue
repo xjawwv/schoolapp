@@ -57,7 +57,11 @@
                 >
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-muted)] font-semibold text-center font-mono w-12">{{ index + 1 }}</td>
                   <td class="py-3.5 px-4 text-sm font-mono text-[color:var(--color-accent)]">{{ teacher.nip || '-' }}</td>
-                  <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">{{ teacher.name }}</td>
+                  <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">
+                    <NuxtLink :to="`/teachers/${teacher.id}`" class="hover:text-[color:var(--color-accent)] transition duration-100">
+                      {{ teacher.name }}
+                    </NuxtLink>
+                  </td>
                   <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ teacher.email }}</td>
                   <td class="py-3.5 px-4 text-sm text-right">
                     <a

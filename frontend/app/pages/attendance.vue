@@ -116,7 +116,16 @@
                     <option value="XII-C">XII-C</option>
                   </select>
 
-                  <div class="flex items-center space-x-2 w-full md:w-auto">
+                  <div class="flex items-center space-x-2 w-full md:w-auto" v-if="currentUser?.role === 'siswa' || currentUser?.role === 'siswi'">
+                    <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Filter Periode:</span>
+                    <select v-model="selectedPeriod" class="input py-1 text-xs bg-[color:var(--color-bg)] select-arrow w-full md:w-40">
+                      <option value="minggu">Minggu Ini</option>
+                      <option value="bulan">Bulan Ini</option>
+                      <option value="semester">Semester Ini</option>
+                      <option value="semua">Semua Riwayat</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center space-x-2 w-full md:w-auto" v-else>
                     <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Filter Tanggal:</span>
                     <input v-model="filterDate" type="date" class="input py-1 text-xs font-mono w-full md:w-auto" @change="loadAttendanceList" />
                   </div>
@@ -137,7 +146,7 @@
                   </thead>
                   <tbody>
                     <tr
-                      v-for="att in attendancesList"
+                      v-for="att in filteredAttendances"
                       :key="att.id"
                       class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
                     >
@@ -156,9 +165,9 @@
                       </td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
                     </tr>
-                    <tr v-if="attendancesList.length === 0">
+                    <tr v-if="filteredAttendances.length === 0">
                       <td colspan="6" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                        No attendance records found for the selected date
+                        Tidak ada catatan absensi dalam periode ini
                       </td>
                     </tr>
                   </tbody>
@@ -173,7 +182,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue"
+import { ref, onMounted, watch, computed } from "vue"
 import {
   AlertCircle as AlertCircleIcon,
   CheckCircle as CheckCircleIcon,
@@ -193,6 +202,7 @@ const attendancesList = ref<any[]>([])
 const filterDate = ref(new Date().toISOString().split("T")[0])
 const searchQuery = ref("")
 const filterClass = ref("")
+const selectedPeriod = ref("bulan")
 
 let debounceTimer: any = null
 
@@ -222,6 +232,57 @@ watch(() => formData.value.status, (newStatus) => {
   }
 })
 
+const filteredAttendances = computed(() => {
+  if (currentUser.value?.role !== 'siswa' && currentUser.value?.role !== 'siswi') {
+    return attendancesList.value
+  }
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+
+  return attendancesList.value.filter(att => {
+    if (!att.date) return false
+    const attDate = new Date(att.date)
+
+    if (selectedPeriod.value === "minggu") {
+      const currentDay = today.getDay()
+      const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - distanceToMonday)
+      monday.setHours(0, 0, 0, 0)
+      
+      const sunday = new Date(monday)
+      sunday.setDate(monday.getDate() + 6)
+      sunday.setHours(23, 59, 59, 999)
+
+      return attDate >= monday && attDate <= sunday
+    }
+
+    if (selectedPeriod.value === "bulan") {
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999)
+      return attDate >= startOfMonth && attDate <= endOfMonth
+    }
+
+    if (selectedPeriod.value === "semester") {
+      const currentMonth = today.getMonth()
+      let startOfSemester: Date
+      let endOfSemester: Date
+
+      if (currentMonth >= 6) {
+        startOfSemester = new Date(today.getFullYear(), 6, 1)
+        endOfSemester = new Date(today.getFullYear(), 11, 31, 23, 59, 59, 999)
+      } else {
+        startOfSemester = new Date(today.getFullYear(), 0, 1)
+        endOfSemester = new Date(today.getFullYear(), 5, 30, 23, 59, 59, 999)
+      }
+      return attDate >= startOfSemester && attDate <= endOfSemester
+    }
+
+    return true
+  })
+})
+
 onMounted(() => {
   const cached = localStorage.getItem("user")
   if (cached && !currentUser.value) {
@@ -247,12 +308,16 @@ async function loadStudents() {
 
 async function loadAttendanceList() {
   try {
-    let url = `/api/attendances?date=${filterDate.value}`
-    if (filterClass.value) {
-      url += `&class=${filterClass.value}`
-    }
-    if (searchQuery.value) {
-      url += `&search=${searchQuery.value}`
+    let url = `/api/attendances`
+    const isStudent = currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi'
+    if (!isStudent) {
+      url += `?date=${filterDate.value}`
+      if (filterClass.value) {
+        url += `&class=${filterClass.value}`
+      }
+      if (searchQuery.value) {
+        url += `&search=${searchQuery.value}`
+      }
     }
     const res: any = await api.get(url)
     if (res.success && res.data) {
