@@ -79,6 +79,7 @@ func seedData() {
 		{Key: "school_max_distance", Value: "250"},
 		{Key: "attendance_start_time", Value: "07:00"},
 		{Key: "attendance_end_time", Value: "17:00"},
+		{Key: "enable_anti_fake_gps", Value: "true"},
 	}
 	for _, s := range settingsToCheck {
 		var count int64

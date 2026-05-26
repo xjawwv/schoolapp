@@ -131,6 +131,21 @@
                       />
                     </div>
                   </div>
+
+                  <div class="flex items-center space-x-3 bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4">
+                    <input
+                      id="anti-fake-gps"
+                      v-model="siteSettings.enable_anti_fake_gps"
+                      true-value="true"
+                      false-value="false"
+                      type="checkbox"
+                      class="w-4 h-4 text-[color:var(--color-accent)] border-[color:var(--color-border)] focus:ring-[color:var(--color-accent)] cursor-pointer"
+                    />
+                    <label for="anti-fake-gps" class="flex flex-col cursor-pointer select-none">
+                      <span class="text-xs uppercase tracking-wider text-[color:var(--color-heading)] font-bold">Anti-Fake GPS / Spoof GPS</span>
+                      <span class="text-[10px] text-[color:var(--color-muted)] leading-relaxed mt-0.5">Deteksi otomatis penggunaan aplikasi pemalsuan lokasi saat siswa melakukan absensi.</span>
+                    </label>
+                  </div>
                 </div>
 
                 <div class="flex flex-col space-y-2 relative">
@@ -209,7 +224,8 @@ const siteSettings = ref({
   school_longitude: "106.2736",
   school_max_distance: "250",
   attendance_start_time: "07:00",
-  attendance_end_time: "17:00"
+  attendance_end_time: "17:00",
+  enable_anti_fake_gps: "true"
 })
 
 let map: any = null
@@ -364,6 +380,7 @@ onMounted(async () => {
       siteSettings.value.school_max_distance = res.data.school_max_distance || "250"
       siteSettings.value.attendance_start_time = res.data.attendance_start_time || "07:00"
       siteSettings.value.attendance_end_time = res.data.attendance_end_time || "17:00"
+      siteSettings.value.enable_anti_fake_gps = res.data.enable_anti_fake_gps || "true"
       siteName.value = res.data.site_name || "SMA N 1 METRO"
     }
 
@@ -402,7 +419,8 @@ async function saveAttendanceSettings() {
       school_longitude: siteSettings.value.school_longitude,
       school_max_distance: String(siteSettings.value.school_max_distance),
       attendance_start_time: siteSettings.value.attendance_start_time,
-      attendance_end_time: siteSettings.value.attendance_end_time
+      attendance_end_time: siteSettings.value.attendance_end_time,
+      enable_anti_fake_gps: siteSettings.value.enable_anti_fake_gps
     }
     const res: any = await api.put("/api/settings", payload)
     if (res.success) {

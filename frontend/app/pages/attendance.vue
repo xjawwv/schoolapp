@@ -258,6 +258,7 @@ const schoolLongitude = ref(106.2736)
 const schoolMaxDistance = ref(250)
 const attendanceStartTime = ref("07:00")
 const attendanceEndTime = ref("17:00")
+const enableAntiFakeGPS = ref("true")
 
 const studentsList = ref<any[]>([])
 const attendancesList = ref<any[]>([])
@@ -323,6 +324,21 @@ function getGPSLocation() {
 
   navigator.geolocation.getCurrentPosition(
     (position) => {
+      if (enableAntiFakeGPS.value === "true") {
+        const isMocked = (position as any).mocked === true ||
+                         (position.coords as any).mocked === true ||
+                         (position.coords as any).isFromMockProvider === true ||
+                         position.coords.accuracy === 0
+        if (isMocked) {
+          gpsStatus.value = "error"
+          gpsErrorMsg.value = "Absensi ditolak: Terdeteksi penggunaan aplikasi Fake GPS / Pemalsu Lokasi"
+          studentLatitude.value = null
+          studentLongitude.value = null
+          distanceToSchool.value = null
+          return
+        }
+      }
+
       studentLatitude.value = position.coords.latitude
       studentLongitude.value = position.coords.longitude
       gpsStatus.value = "success"
@@ -374,6 +390,7 @@ async function loadSchoolSettings() {
       schoolMaxDistance.value = parseInt(res.data.school_max_distance) || 250
       attendanceStartTime.value = res.data.attendance_start_time || "07:00"
       attendanceEndTime.value = res.data.attendance_end_time || "17:00"
+      enableAntiFakeGPS.value = res.data.enable_anti_fake_gps || "true"
     }
   } catch (error) {
     console.error("Gagal memuat konfigurasi absensi", error)
