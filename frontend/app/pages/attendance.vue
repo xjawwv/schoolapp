@@ -19,7 +19,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div class="lg:col-span-4" v-if="currentUser?.role === 'siswa' || currentUser?.role === 'siswi'">
+          <div class="lg:col-span-4" v-if="currentUser?.role === 'siswa' || currentUser?.role === 'siswi' || currentUser?.role === 'admin' || currentUser?.role === 'guru'">
             <div class="card space-y-6 shadow-[--shadow-sm]">
               <div>
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide mb-1">
@@ -43,12 +43,54 @@
 
                 <div class="space-y-1.5" v-if="!isEdit && currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Siswa</label>
-                  <select v-model="formData.student_id" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
-                    <option value="" disabled>Pilih Siswa</option>
-                    <option v-for="student in studentsList" :key="student.id" :value="student.id">
-                      {{ student.nisn }} - {{ student.name }} ({{ student.class }})
-                    </option>
-                  </select>
+                  <HeadlessCombobox v-model="formData.student_id" as="div" class="relative z-20">
+                    <div class="relative w-full">
+                      <HeadlessComboboxInput
+                        class="input w-full bg-[color:var(--color-bg)] pr-10 text-xs font-semibold"
+                        @change="queryStudent = $event.target.value"
+                        :display-value="(id) => {
+                          const student = studentsList.find(s => s.id === id)
+                          return student ? `${student.nisn} - ${student.name} (${student.class})` : ''
+                        }"
+                        placeholder="Cari dan pilih siswa..."
+                      />
+                      <HeadlessComboboxButton class="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
+                        <ChevronsUpDownIcon class="h-4 w-4 text-[color:var(--color-muted)]" aria-hidden="true" />
+                      </HeadlessComboboxButton>
+                    </div>
+                    
+                    <HeadlessTransitionRoot
+                      leave="transition ease-in duration-100"
+                      leaveFrom="opacity-100"
+                      leaveTo="opacity-0"
+                      @after-leave="queryStudent = ''"
+                    >
+                      <HeadlessComboboxOptions class="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md bg-[color:var(--color-surface)] border border-[color:var(--color-border)] py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none text-xs">
+                        <div v-if="filteredStudents.length === 0 && queryStudent !== ''" class="relative cursor-default select-none py-2 px-4 text-[color:var(--color-muted)]">
+                          Siswa tidak ditemukan.
+                        </div>
+                        
+                        <HeadlessComboboxOption
+                          v-for="student in filteredStudents"
+                          :key="student.id"
+                          :value="student.id"
+                          as="template"
+                          v-slot="{ selected, active }"
+                        >
+                          <li
+                            :class="[
+                              active ? 'bg-[color:var(--color-accent)] text-[color:var(--color-accent-fg)] font-semibold' : 'text-[color:var(--color-text)]',
+                              'relative cursor-pointer select-none py-2 px-4'
+                            ]"
+                          >
+                            <span :class="[selected ? 'font-bold text-[color:var(--color-accent)]' : 'font-normal', 'block truncate', active ? '!text-[color:var(--color-accent-fg)]' : '']">
+                              {{ student.nisn }} - {{ student.name }} ({{ student.class }})
+                            </span>
+                          </li>
+                        </HeadlessComboboxOption>
+                      </HeadlessComboboxOptions>
+                    </HeadlessTransitionRoot>
+                  </HeadlessCombobox>
                 </div>
                 <div class="space-y-1.5" v-else>
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Siswa</label>
@@ -134,7 +176,7 @@
             </div>
           </div>
 
-          <div :class="(currentUser?.role === 'siswa' || currentUser?.role === 'siswi') ? 'lg:col-span-8' : 'lg:col-span-12'">
+          <div :class="(currentUser?.role === 'siswa' || currentUser?.role === 'siswi' || currentUser?.role === 'admin' || currentUser?.role === 'guru') ? 'lg:col-span-8' : 'lg:col-span-12'">
             <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
               <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">
@@ -241,7 +283,8 @@ import {
   AlertCircle as AlertCircleIcon,
   CheckCircle as CheckCircleIcon,
   Search as SearchIcon,
-  MapPin as MapPinIcon
+  MapPin as MapPinIcon,
+  ChevronsUpDown as ChevronsUpDownIcon
 } from "lucide-vue-next"
 import { useApi } from "~/composables/useApi"
 
@@ -265,6 +308,17 @@ const filterDate = ref(new Date().toISOString().split("T")[0])
 const searchQuery = ref("")
 const filterClass = ref("")
 const selectedPeriod = ref("bulan")
+
+const queryStudent = ref("")
+const filteredStudents = computed(() => {
+  if (queryStudent.value === "") {
+    return studentsList.value
+  }
+  return studentsList.value.filter((student) => {
+    return student.name.toLowerCase().includes(queryStudent.value.toLowerCase()) ||
+           student.nisn.toLowerCase().includes(queryStudent.value.toLowerCase())
+  })
+})
 
 let debounceTimer: any = null
 

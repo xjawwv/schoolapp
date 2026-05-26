@@ -7,6 +7,7 @@ import (
 	"schoolapp/backend/middleware"
 
 	"github.com/gin-gonic/gin"
+	socketio "github.com/googollee/go-socket.io"
 )
 
 func CORSMiddleware() gin.HandlerFunc {
@@ -30,10 +31,12 @@ func CORSMiddleware() gin.HandlerFunc {
 	}
 }
 
-func SetupRouter() *gin.Engine {
+func SetupRouter(socketServer *socketio.Server) *gin.Engine {
 	r := gin.Default()
 
 	r.Use(CORSMiddleware())
+	r.GET("/socket.io/*any", gin.WrapH(socketServer))
+	r.POST("/socket.io/*any", gin.WrapH(socketServer))
 	r.Static("/uploads", "./uploads")
 
 	api := r.Group("/api")

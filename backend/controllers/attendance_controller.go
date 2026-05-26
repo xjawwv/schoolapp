@@ -8,6 +8,7 @@ import (
 
 	"schoolapp/backend/config"
 	"schoolapp/backend/models"
+	"schoolapp/backend/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -272,6 +273,8 @@ func InputAttendance(c *gin.Context) {
 
 		config.DB.Preload("Student").First(&attendance, attendance.ID)
 
+		services.BroadcastNotification(attendance.Student.Name + " melakukan absensi " + attendance.Status)
+
 		c.JSON(http.StatusOK, gin.H{
 			"success": true,
 			"data":    attendance,
@@ -300,6 +303,8 @@ func InputAttendance(c *gin.Context) {
 	}
 
 	config.DB.Preload("Student").First(&attendance, attendance.ID)
+
+	services.BroadcastNotification(attendance.Student.Name + " melakukan absensi " + attendance.Status)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,

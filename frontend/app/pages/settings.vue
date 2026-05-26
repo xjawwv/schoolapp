@@ -137,23 +137,21 @@
                   <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Pilih Pusat Koordinat Peta</label>
                   <div class="relative w-full h-[250px] border border-[color:var(--color-border)] rounded-lg bg-[color:var(--color-bg)] overflow-hidden z-10">
                     <div id="map" class="w-full h-full"></div>
-                    <div class="absolute top-3 right-3 flex bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-1 rounded-lg shadow-lg space-x-1" style="z-index: 1000 !important;">
-                      <button
-                        type="button"
-                        @click="setMapType('roadmap')"
-                        class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded transition duration-150 cursor-pointer"
-                        :class="mapType === 'roadmap' ? 'bg-[color:var(--color-accent)] text-[color:var(--color-accent-fg)]' : 'text-[color:var(--color-text)] hover:bg-[color:var(--color-bg)]'"
-                      >
-                        Peta
-                      </button>
-                      <button
-                        type="button"
-                        @click="setMapType('satellite')"
-                        class="px-2.5 py-1 text-[10px] uppercase tracking-wider font-bold rounded transition duration-150 cursor-pointer"
-                        :class="mapType === 'satellite' ? 'bg-[color:var(--color-accent)] text-[color:var(--color-accent-fg)]' : 'text-[color:var(--color-text)] hover:bg-[color:var(--color-bg)]'"
-                      >
+                    <div class="absolute top-3 right-3 flex items-center bg-[color:var(--color-surface)] border border-[color:var(--color-border)] px-3 py-1.5 rounded-lg shadow-lg space-x-2.5" style="z-index: 1000 !important;">
+                      <span class="text-[10px] uppercase tracking-wider font-bold text-[color:var(--color-text)]">
                         Satelit
-                      </button>
+                      </span>
+                      <HeadlessSwitch
+                        v-model="isSatellite"
+                        :class="isSatellite ? 'bg-[color:var(--color-accent)]' : 'bg-zinc-700'"
+                        class="relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                      >
+                        <span
+                          aria-hidden="true"
+                          :class="isSatellite ? 'translate-x-4' : 'translate-x-0'"
+                          class="pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out"
+                        />
+                      </HeadlessSwitch>
                     </div>
                   </div>
                   <p class="text-[10px] text-[color:var(--color-muted)] italic">Geser penanda merah atau klik lokasi mana saja pada peta untuk mengatur koordinat sekolah.</p>
@@ -216,6 +214,7 @@ let map: any = null
 let marker: any = null
 let circle: any = null
 const mapType = ref("roadmap")
+const isSatellite = ref(false)
 let roadmapLayer: any = null
 let satelliteLayer: any = null
 
@@ -342,6 +341,10 @@ watch(() => siteSettings.value.school_max_distance, (newVal) => {
       updateCircle(L, lat, lon, radius)
     }
   }
+})
+
+watch(isSatellite, (val) => {
+  setMapType(val ? "satellite" : "roadmap")
 })
 
 onMounted(async () => {

@@ -11,9 +11,51 @@
         </button>
       </div>
       <div class="ml-4 flex items-center md:ml-6" v-if="user">
-        <div class="relative">
-          <button
-            @click="isMenuOpen = !isMenuOpen"
+        <HeadlessPopover class="relative mr-2" v-if="user.role === 'admin' || user.role === 'guru'">
+          <HeadlessPopoverButton
+            class="p-2 text-[color:var(--color-muted)] hover:text-[color:var(--color-heading)] hover:bg-[color:var(--color-bg)] rounded-lg transition duration-150 cursor-pointer focus:outline-none relative"
+          >
+            <BellIcon class="w-5 h-5" />
+            <span v-if="unreadCount > 0" class="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-[color:var(--color-error)] ring-2 ring-[color:var(--color-surface)]"></span>
+          </HeadlessPopoverButton>
+
+          <transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="translate-y-1 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="translate-y-1 opacity-0"
+          >
+            <HeadlessPopoverPanel
+              class="absolute right-0 mt-2 w-80 bg-[color:var(--color-surface)] border border-[color:var(--color-border)] shadow-[--shadow-lg] z-30 focus:outline-none overflow-hidden"
+            >
+              <div class="px-4 py-3 border-b border-[color:var(--color-border)] flex items-center justify-between">
+                <span class="text-xs uppercase tracking-wider text-[color:var(--color-heading)] font-bold">Notifikasi Masuk</span>
+                <button
+                  v-if="notifications.length > 0"
+                  @click="clearAll"
+                  class="text-[10px] text-[color:var(--color-accent)] font-semibold hover:underline cursor-pointer uppercase tracking-wider"
+                >
+                  Hapus Semua
+                </button>
+              </div>
+
+              <div class="max-h-64 overflow-y-auto divide-y divide-[color:var(--color-border)]">
+                <div v-for="(n, idx) in notifications" :key="idx" class="p-3 text-xs text-[color:var(--color-text)] hover:bg-[color:var(--color-bg)]/50 transition">
+                  <p class="font-medium text-[color:var(--color-heading)]">{{ n.message }}</p>
+                  <p class="text-[9px] text-[color:var(--color-muted)] mt-1 font-mono">{{ n.time }}</p>
+                </div>
+                <div v-if="notifications.length === 0" class="py-8 text-center text-xs text-[color:var(--color-muted)] uppercase tracking-wider">
+                  Tidak ada notifikasi baru
+                </div>
+              </div>
+            </HeadlessPopoverPanel>
+          </transition>
+        </HeadlessPopover>
+
+        <HeadlessMenu as="div" class="relative">
+          <HeadlessMenuButton
             class="flex items-center group p-2 rounded-lg hover:bg-[color:var(--color-bg)] transition duration-150 cursor-pointer focus:outline-none"
           >
             <div class="h-8 w-8 rounded-full overflow-hidden border border-[color:var(--color-accent)]/20 bg-[color:var(--color-bg)] flex items-center justify-center text-sm font-bold shrink-0">
@@ -28,63 +70,81 @@
                 {{ user.email || user.role }}
               </p>
             </div>
-          </button>
+          </HeadlessMenuButton>
 
-          <div
-            v-if="isMenuOpen"
-            class="absolute right-0 mt-2 w-56 bg-[color:var(--color-surface)] border border-[color:var(--color-border)] shadow-[--shadow-md] py-1 z-30 flex flex-col"
+          <transition
+            enter-active-class="transition duration-100 ease-out"
+            enter-from-class="transform scale-95 opacity-0"
+            enter-to-class="transform scale-100 opacity-100"
+            leave-active-class="transition duration-75 ease-in"
+            leave-from-class="transform scale-100 opacity-100"
+            leave-to-class="transform scale-95 opacity-0"
           >
-            <div class="px-4 py-3 md:hidden border-b border-[color:var(--color-border)] mb-1">
-              <div class="text-sm font-semibold text-[color:var(--color-heading)]">{{ user.name }}</div>
-              <div class="text-[10px] text-[color:var(--color-muted)] uppercase tracking-wider mt-0.5">{{ user.role }}</div>
-            </div>
-
-            <button
-              @click="toggleTheme"
-              class="flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-wider text-[color:var(--color-text)] hover:bg-[color:var(--color-bg)] hover:text-[color:var(--color-heading)] transition duration-150 cursor-pointer text-left w-full"
+            <HeadlessMenuItems
+              class="absolute right-0 mt-2 w-56 bg-[color:var(--color-surface)] border border-[color:var(--color-border)] shadow-[--shadow-md] py-1 z-30 focus:outline-none flex flex-col"
             >
-              <SunIcon v-if="theme === 'dark'" class="w-4 h-4 text-[color:var(--color-accent)] shrink-0" />
-              <MoonIcon v-else class="w-4 h-4 text-[color:var(--color-accent)] shrink-0" />
-              <span>{{ theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</span>
-            </button>
+              <div class="px-4 py-3 md:hidden border-b border-[color:var(--color-border)] mb-1">
+                <div class="text-sm font-semibold text-[color:var(--color-heading)]">{{ user.name }}</div>
+                <div class="text-[10px] text-[color:var(--color-muted)] uppercase tracking-wider mt-0.5">{{ user.role }}</div>
+              </div>
 
-            <div class="h-[1px] bg-[color:var(--color-border)] my-0.5"></div>
+              <HeadlessMenuItem v-slot="{ active }">
+                <button
+                  @click="toggleTheme"
+                  :class="[
+                    active ? 'bg-[color:var(--color-bg)] text-[color:var(--color-heading)]' : 'text-[color:var(--color-text)]',
+                    'flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-wider transition duration-150 cursor-pointer text-left w-full'
+                  ]"
+                >
+                  <SunIcon v-if="theme === 'dark'" class="w-4 h-4 text-[color:var(--color-accent)] shrink-0" />
+                  <MoonIcon v-else class="w-4 h-4 text-[color:var(--color-accent)] shrink-0" />
+                  <span>{{ theme === 'dark' ? 'Mode Terang' : 'Mode Gelap' }}</span>
+                </button>
+              </HeadlessMenuItem>
 
-            <button
-              @click="logout"
-              class="flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-wider text-[color:var(--color-error)] hover:bg-[color:var(--color-bg)] hover:opacity-90 transition duration-150 cursor-pointer text-left w-full"
-            >
-              <LogOutIcon class="w-4 h-4 shrink-0" />
-              <span>Keluar</span>
-            </button>
-          </div>
+              <div class="h-[1px] bg-[color:var(--color-border)] my-0.5"></div>
 
-          <div
-            v-if="isMenuOpen"
-            @click="isMenuOpen = false"
-            class="fixed inset-0 z-20 cursor-default"
-          ></div>
-        </div>
+              <HeadlessMenuItem v-slot="{ active }">
+                <button
+                  @click="logout"
+                  :class="[
+                    active ? 'bg-[color:var(--color-bg)]' : '',
+                    'flex items-center gap-3 px-4 py-2.5 text-xs uppercase tracking-wider text-[color:var(--color-error)] transition duration-150 cursor-pointer text-left w-full'
+                  ]"
+                >
+                  <LogOutIcon class="w-4 h-4 shrink-0" />
+                  <span>Keluar</span>
+                </button>
+              </HeadlessMenuItem>
+            </HeadlessMenuItems>
+          </transition>
+        </HeadlessMenu>
       </div>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue"
+import { ref, onMounted, onUnmounted, computed } from "vue"
 import {
   LogOut as LogOutIcon,
   Sun as SunIcon,
   Moon as MoonIcon,
   Menu as MenuIcon,
-  ChevronDown as ChevronDownIcon
+  ChevronDown as ChevronDownIcon,
+  Bell as BellIcon
 } from "lucide-vue-next"
+import { io } from "socket.io-client"
 
 const user = useState<any>("currentUser", () => null)
 const config = useRuntimeConfig()
 const theme = ref("dark")
 const isSidebarOpen = useState("sidebarOpen", () => false)
-const isMenuOpen = ref(false)
+
+const unreadCount = ref(0)
+const notifications = ref<Array<{ message: string; time: string }>>([])
+
+let socket: any = null
 
 const avatarUrl = computed(() => {
   if (!user.value?.avatar) return ""
@@ -101,6 +161,26 @@ onMounted(() => {
   const cachedTheme = localStorage.getItem("theme") || "dark"
   theme.value = cachedTheme
   document.documentElement.setAttribute("data-theme", cachedTheme)
+
+  if (user.value && (user.value.role === 'admin' || user.value.role === 'guru')) {
+    const socketUrl = config.public.apiUrl || "http://localhost:8081"
+    socket = io(socketUrl, {
+      transports: ["websocket"]
+    })
+
+    socket.on("notification", (msg: string) => {
+      const now = new Date()
+      const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')}`
+      notifications.value.unshift({ message: msg, time: timeStr })
+      unreadCount.value++
+    })
+  }
+})
+
+onUnmounted(() => {
+  if (socket) {
+    socket.disconnect()
+  }
 })
 
 function toggleTheme() {
@@ -108,14 +188,17 @@ function toggleTheme() {
   theme.value = newTheme
   localStorage.setItem("theme", newTheme)
   document.documentElement.setAttribute("data-theme", newTheme)
-  isMenuOpen.value = false
 }
 
 function logout() {
   localStorage.removeItem("token")
   localStorage.removeItem("user")
   user.value = null
-  isMenuOpen.value = false
   navigateTo("/login")
+}
+
+function clearAll() {
+  notifications.value = []
+  unreadCount.value = 0
 }
 </script>

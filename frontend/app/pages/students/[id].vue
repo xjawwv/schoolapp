@@ -108,149 +108,179 @@
 
           <div class="lg:col-span-8 space-y-6">
             <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6">
-              <div class="flex items-center space-x-6 border-b border-[color:var(--color-border)] pb-4 mb-6">
-                <button
-                  @click="activeTab = 'grades'"
-                  class="text-xs uppercase tracking-widest font-bold pb-2 relative transition duration-150 cursor-pointer"
-                  :class="activeTab === 'grades' ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
-                >
-                  Daftar Nilai
-                  <span v-if="activeTab === 'grades'" class="absolute bottom-[-17px] left-0 right-0 h-[2px] bg-[color:var(--color-accent)]"></span>
-                </button>
-                <button
-                  @click="activeTab = 'attendance'"
-                  class="text-xs uppercase tracking-widest font-bold pb-2 relative transition duration-150 cursor-pointer"
-                  :class="activeTab === 'attendance' ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
-                >
-                  Riwayat Absensi
-                  <span v-if="activeTab === 'attendance'" class="absolute bottom-[-17px] left-0 right-0 h-[2px] bg-[color:var(--color-accent)]"></span>
-                </button>
-              </div>
-
-              <div v-if="activeTab === 'grades'">
-                <div class="overflow-x-auto">
-                  <table class="w-full text-left border-collapse">
-                    <thead>
-                      <tr class="border-b border-[color:var(--color-border)]">
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Subject</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Semester</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Academic Year</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Score</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="grade in grades"
-                        :key="grade.id"
-                        class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
-                      >
-                        <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">{{ grade.subject }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">Semester {{ grade.semester }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ grade.academic_year }}</td>
-                        <td class="py-3.5 px-4 text-sm text-right font-bold text-[color:var(--color-accent)] font-mono">{{ grade.score.toFixed(1) }}</td>
-                        <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
-                          <button @click="openGradeModal(grade)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
-                            Ubah
-                          </button>
-                        </td>
-                      </tr>
-                      <tr v-if="grades.length === 0">
-                        <td :colspan="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi' ? 5 : 4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                          No grade records found for this student
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div v-if="activeTab === 'attendance'" class="space-y-4">
-                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[color:var(--color-border)]/50">
-                  <div>
-                    <h4 class="text-sm font-bold text-[color:var(--color-heading)] tracking-wide">Rekap Presensi</h4>
-                    <p class="text-[10px] text-[color:var(--color-muted)] uppercase tracking-wider mt-0.5">Filter riwayat presensi berkala</p>
-                  </div>
-                  <div class="flex items-center space-x-2 w-full sm:w-auto">
-                    <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Periode:</span>
-                    <select v-model="attendancePeriod" class="input py-1.5 px-3 text-xs bg-[color:var(--color-bg)] select-arrow w-full sm:w-44">
-                      <option value="minggu">1 Minggu Ini</option>
-                      <option value="bulan">1 Bulan Ini</option>
-                      <option value="semester">1 Semester Ini</option>
-                      <option value="semua">Semua Riwayat</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="overflow-x-auto">
-                  <table class="w-full text-left border-collapse">
-                    <thead>
-                      <tr class="border-b border-[color:var(--color-border)]">
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tanggal</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Waktu</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
-                        <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="att in paginatedAttendances"
-                        :key="att.id"
-                        class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
-                      >
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-heading)] font-mono">{{ formatDateOnly(att.date) }}</td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">
-                          <div v-if="att.timestamp" class="font-semibold text-[color:var(--color-heading)]">
-                            {{ att.timestamp.split(' ')[1] || att.timestamp }}
-                          </div>
-                          <div v-else class="text-[color:var(--color-muted)]">-</div>
-                          <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left mt-0.5">
-                            GPS: {{ att.latitude.toFixed(4) }}, {{ att.longitude.toFixed(4) }}
-                          </div>
-                        </td>
-                        <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider">
-                          <span :class="getStatusClass(att.status)">
-                            {{ att.status }}
-                          </span>
-                        </td>
-                        <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
-                      </tr>
-                      <tr v-if="paginatedAttendances.length === 0">
-                        <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
-                          No attendance records found for this student
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[color:var(--color-border)]/50">
-                  <div class="text-[11px] text-[color:var(--color-muted)] font-semibold uppercase tracking-wider">
-                    Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredAttendances.length) }} dari {{ filteredAttendances.length }} riwayat
-                  </div>
-                  <div class="flex items-center space-x-1.5">
+              <HeadlessTabGroup>
+                <HeadlessTabList class="flex items-center space-x-6 border-b border-[color:var(--color-border)] pb-4 mb-6">
+                  <HeadlessTab
+                    v-slot="{ selected }"
+                    as="template"
+                  >
                     <button
-                      type="button"
-                      :disabled="currentPage === 1"
-                      @click="currentPage--"
-                      class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      class="text-xs uppercase tracking-widest font-bold pb-2 relative transition duration-150 cursor-pointer focus:outline-none"
+                      :class="selected ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
                     >
-                      <ChevronLeftIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                      Daftar Nilai
+                      <span v-if="selected" class="absolute bottom-[-17px] left-0 right-0 h-[2px] bg-[color:var(--color-accent)]"></span>
                     </button>
-                    <span class="text-xs font-mono font-bold px-3 py-1.5 bg-[color:var(--color-surface)] border border-[color:var(--color-border)]">
-                      {{ currentPage }} / {{ totalPages }}
-                    </span>
+                  </HeadlessTab>
+                  <HeadlessTab
+                    v-slot="{ selected }"
+                    as="template"
+                  >
                     <button
-                      type="button"
-                      :disabled="currentPage === totalPages"
-                      @click="currentPage++"
-                      class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                      class="text-xs uppercase tracking-widest font-bold pb-2 relative transition duration-150 cursor-pointer focus:outline-none"
+                      :class="selected ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
                     >
-                      <ChevronRightIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                      Riwayat Absensi
+                      <span v-if="selected" class="absolute bottom-[-17px] left-0 right-0 h-[2px] bg-[color:var(--color-accent)]"></span>
                     </button>
-                  </div>
-                </div>
-              </div>
+                  </HeadlessTab>
+                </HeadlessTabList>
+
+                <HeadlessTabPanels>
+                  <HeadlessTabPanel class="focus:outline-none">
+                    <HeadlessTransition
+                      show="true"
+                      appear
+                      enter="transition ease-out duration-300"
+                      enterFrom="opacity-0 translate-y-2"
+                      enterTo="opacity-100 translate-y-0"
+                    >
+                      <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                          <thead>
+                            <tr class="border-b border-[color:var(--color-border)]">
+                              <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Subject</th>
+                              <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Semester</th>
+                              <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Academic Year</th>
+                              <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Score</th>
+                              <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr
+                              v-for="grade in grades"
+                              :key="grade.id"
+                              class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
+                            >
+                              <td class="py-3.5 px-4 text-sm font-semibold text-[color:var(--color-heading)]">{{ grade.subject }}</td>
+                              <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">Semester {{ grade.semester }}</td>
+                              <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ grade.academic_year }}</td>
+                              <td class="py-3.5 px-4 text-sm text-right font-bold text-[color:var(--color-accent)] font-mono">{{ grade.score.toFixed(1) }}</td>
+                              <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
+                                <button @click="openGradeModal(grade)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
+                                  Ubah
+                                </button>
+                              </td>
+                            </tr>
+                            <tr v-if="grades.length === 0">
+                              <td :colspan="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi' ? 5 : 4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                                No grade records found for this student
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </HeadlessTransition>
+                  </HeadlessTabPanel>
+
+                  <HeadlessTabPanel class="focus:outline-none">
+                    <HeadlessTransition
+                      show="true"
+                      appear
+                      enter="transition ease-out duration-300"
+                      enterFrom="opacity-0 translate-y-2"
+                      enterTo="opacity-100 translate-y-0"
+                    >
+                      <div class="space-y-4">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-[color:var(--color-border)]/50">
+                          <div>
+                            <h4 class="text-sm font-bold text-[color:var(--color-heading)] tracking-wide">Rekap Presensi</h4>
+                            <p class="text-[10px] text-[color:var(--color-muted)] uppercase tracking-wider mt-0.5">Filter riwayat presensi berkala</p>
+                          </div>
+                          <div class="flex items-center space-x-2 w-full sm:w-auto">
+                            <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Periode:</span>
+                            <select v-model="attendancePeriod" class="input py-1.5 px-3 text-xs bg-[color:var(--color-bg)] select-arrow w-full sm:w-44">
+                              <option value="minggu">1 Minggu Ini</option>
+                              <option value="bulan">1 Bulan Ini</option>
+                              <option value="semester">1 Semester Ini</option>
+                              <option value="semua">Semua Riwayat</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                          <table class="w-full text-left border-collapse">
+                            <thead>
+                              <tr class="border-b border-[color:var(--color-border)]">
+                                <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Tanggal</th>
+                                <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Waktu</th>
+                                <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
+                                <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr
+                                v-for="att in paginatedAttendances"
+                                :key="att.id"
+                                class="border-b border-[color:var(--color-border)] hover:bg-[color:var(--color-bg)] transition duration-150"
+                              >
+                                <td class="py-3.5 px-4 text-sm text-[color:var(--color-heading)] font-mono">{{ formatDateOnly(att.date) }}</td>
+                                <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">
+                                  <div v-if="att.timestamp" class="font-semibold text-[color:var(--color-heading)]">
+                                    {{ att.timestamp.split(' ')[1] || att.timestamp }}
+                                  </div>
+                                  <div v-else class="text-[color:var(--color-muted)]">-</div>
+                                  <div v-if="att.latitude" class="text-[9px] text-[color:var(--color-accent)] font-mono scale-95 origin-left mt-0.5">
+                                    GPS: {{ att.latitude.toFixed(4) }}, {{ att.longitude.toFixed(4) }}
+                                  </div>
+                                </td>
+                                <td class="py-3.5 px-4 text-sm font-bold uppercase tracking-wider">
+                                  <span :class="getStatusClass(att.status)">
+                                    {{ att.status }}
+                                  </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
+                              </tr>
+                              <tr v-if="paginatedAttendances.length === 0">
+                                <td colspan="4" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                                  No attendance records found for this student
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div v-if="totalPages > 1" class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-[color:var(--color-border)]/50">
+                          <div class="text-[11px] text-[color:var(--color-muted)] font-semibold uppercase tracking-wider">
+                            Menampilkan {{ (currentPage - 1) * itemsPerPage + 1 }} - {{ Math.min(currentPage * itemsPerPage, filteredAttendances.length) }} dari {{ filteredAttendances.length }} riwayat
+                          </div>
+                          <div class="flex items-center space-x-1.5">
+                            <button
+                              type="button"
+                              :disabled="currentPage === 1"
+                              @click="currentPage--"
+                              class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              <ChevronLeftIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                            </button>
+                            <span class="text-xs font-mono font-bold px-3 py-1.5 bg-[color:var(--color-surface)] border border-[color:var(--color-border)]">
+                              {{ currentPage }} / {{ totalPages }}
+                            </span>
+                            <button
+                              type="button"
+                              :disabled="currentPage === totalPages"
+                              @click="currentPage++"
+                              class="p-2 border border-[color:var(--color-border)] bg-[color:var(--color-surface)] hover:bg-[color:var(--color-bg)] transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              <ChevronRightIcon class="w-4 h-4 text-[color:var(--color-text)]" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </HeadlessTransition>
+                  </HeadlessTabPanel>
+                </HeadlessTabPanels>
+              </HeadlessTabGroup>
             </div>
           </div>
         </div>
@@ -370,7 +400,6 @@ const currentUser = useState<any>("currentUser", () => null)
 const student = ref<any | null>(null)
 const grades = ref<any[]>([])
 const attendances = ref<any[]>([])
-const activeTab = ref("grades")
 const showForm = ref(false)
 const toastMessage = ref("")
 

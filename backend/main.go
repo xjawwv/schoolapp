@@ -6,6 +6,7 @@ import (
 
 	"schoolapp/backend/config"
 	"schoolapp/backend/routes"
+	"schoolapp/backend/services"
 
 	"github.com/joho/godotenv"
 )
@@ -18,7 +19,15 @@ func main() {
 
 	config.ConnectDB()
 
-	r := routes.SetupRouter()
+	socketServer := services.InitSocketServer()
+	go func() {
+		if err := socketServer.Serve(); err != nil {
+			log.Fatalf("Socket.IO listen error: %s\n", err)
+		}
+	}()
+	defer socketServer.Close()
+
+	r := routes.SetupRouter(socketServer)
 
 	port := os.Getenv("PORT")
 	if port == "" {
