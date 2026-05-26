@@ -52,6 +52,11 @@
           <textarea v-model="formData.address" class="input w-full h-20 resize-none" placeholder="Alamat lengkap tempat tinggal siswa"></textarea>
         </div>
 
+        <div class="bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-3.5 text-xs text-[color:var(--color-text)] space-y-1 leading-relaxed">
+          <div class="font-bold text-[color:var(--color-heading)] uppercase tracking-wider text-[10px]">Informasi Akun Login</div>
+          <p>Penyimpanan data ini otomatis membuat/memperbarui akun portal siswa dengan Username = NISN dan kata sandi default "1".</p>
+        </div>
+
         <div class="flex items-center justify-end space-x-3 pt-4 border-t border-[color:var(--color-border)]">
           <button type="button" @click="$emit('close')" class="button-ghost text-xs font-semibold uppercase tracking-wider">
             Batal
@@ -130,7 +135,7 @@ async function handleSubmit() {
   errorMessage.value = ""
 
   try {
-    let res
+    let res: any
     if (isEdit.value && props.student) {
       res = await api.put(`/api/students/${props.student.id}`, formData.value)
     } else {

@@ -41,7 +41,7 @@
                   <input v-model="formData.date" type="date" class="input w-full font-mono opacity-60 bg-[color:var(--color-surface)]" disabled />
                 </div>
 
-                <div class="space-y-1.5" v-if="!isEdit">
+                <div class="space-y-1.5" v-if="!isEdit && currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Siswa</label>
                   <select v-model="formData.student_id" class="input w-full bg-[color:var(--color-bg)] select-arrow" required>
                     <option value="" disabled>Pilih Siswa</option>
@@ -52,7 +52,7 @@
                 </div>
                 <div class="space-y-1.5" v-else>
                   <label class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">Siswa</label>
-                  <input type="text" class="input w-full opacity-60 bg-[color:var(--color-surface)]" readonly :value="formData.student_name" />
+                  <input type="text" class="input w-full opacity-60 bg-[color:var(--color-surface)]" readonly :value="(currentUser?.role === 'siswa' || currentUser?.role === 'siswi') ? currentUser?.name : formData.student_name" />
                 </div>
 
                 <div class="space-y-1.5">
@@ -112,7 +112,7 @@
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Date</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
-                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Actions</th>
+                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,7 +135,7 @@
                         </span>
                       </td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
-                      <td class="py-3.5 px-4 text-sm text-right">
+                      <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
                         <button @click="startEdit(att)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
                           Ubah
                         </button>
@@ -170,6 +170,7 @@ definePageMeta({
 })
 
 const api = useApi()
+const currentUser = useState<any>("currentUser", () => null)
 
 const studentsList = ref<any[]>([])
 const attendancesList = ref<any[]>([])
@@ -195,6 +196,13 @@ watch(() => formData.value.status, (newStatus) => {
 })
 
 onMounted(() => {
+  const cached = localStorage.getItem("user")
+  if (cached && !currentUser.value) {
+    currentUser.value = JSON.parse(cached)
+  }
+  if (currentUser.value?.role === 'siswa' || currentUser.value?.role === 'siswi') {
+    formData.value.student_id = currentUser.value.student_id
+  }
   loadStudents()
   loadAttendanceList()
 })

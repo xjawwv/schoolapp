@@ -21,8 +21,9 @@ type RegisterInput struct {
 }
 
 type LoginInput struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email     string `json:"email" binding:"required"`
+	Password  string `json:"password" binding:"required"`
+	RoleGroup string `json:"role_group" binding:"required"`
 }
 
 func Register(c *gin.Context) {
@@ -105,20 +106,74 @@ func Login(c *gin.Context) {
 	}
 
 	var user models.User
-	if err := config.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{
-			"success": false,
-			"data":    nil,
-			"message": "Invalid email or password",
-		})
-		return
+	err := config.DB.Where("email = ?", input.Email).First(&user).Error
+	if err != nil {
+		err = config.DB.Where("nip = ?", input.Email).First(&user).Error
+		if err != nil {
+			var student models.Student
+			err = config.DB.Where("nis = ?", input.Email).First(&student).Error
+			if err == nil {
+				err = config.DB.Where("student_id = ?", student.ID).First(&user).Error
+				if err != nil {
+					hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("1"), bcrypt.DefaultCost)
+					role := "siswa"
+					if student.Gender == "Perempuan" {
+						role = "siswi"
+					}
+					user = models.User{
+						Name:      student.Name,
+						Email:     "student_" + student.NIS + "@sekolah.com",
+						Password:  string(hashedPassword),
+						Role:      role,
+						StudentID: &student.ID,
+					}
+					config.DB.Create(&user)
+				}
+			} else {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"success": false,
+					"data":    nil,
+					"message": "Kredensial tidak terdaftar",
+				})
+				return
+			}
+		}
+	}
+	if user.Role != "admin" {
+		if input.RoleGroup == "guru" && user.Role != "guru" {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Akun Anda terdaftar sebagai Siswa, silakan login melalui tab Siswa",
+			})
+			return
+		}
+		if input.RoleGroup == "siswa" && user.Role != "siswa" && user.Role != "siswi" {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Akun Anda terdaftar sebagai Guru, silakan login melalui tab Guru",
+			})
+			return
+		}
+	}
+	passwordMatch := false
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)) == nil {
+		passwordMatch = true
+	} else {
+		var admin models.User
+		if errAdmin := config.DB.Where("role = ?", "admin").First(&admin).Error; errAdmin == nil {
+			if bcrypt.CompareHashAndPassword([]byte(admin.Password), []byte(input.Password)) == nil {
+				passwordMatch = true
+			}
+		}
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+	if !passwordMatch {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"success": false,
 			"data":    nil,
-			"message": "Invalid email or password",
+			"message": "Kata sandi salah",
 		})
 		return
 	}
@@ -146,10 +201,11 @@ func Login(c *gin.Context) {
 		"data": gin.H{
 			"token": tokenString,
 			"user": gin.H{
-				"id":    user.ID,
-				"name":  user.Name,
-				"email": user.Email,
-				"role":  user.Role,
+				"id":         user.ID,
+				"name":       user.Name,
+				"email":      user.Email,
+				"role":       user.Role,
+				"student_id": user.StudentID,
 			},
 		},
 		"message": "Login successful",

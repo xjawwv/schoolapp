@@ -29,6 +29,7 @@ func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
 	r.Use(CORSMiddleware())
+	r.Static("/uploads", "./uploads")
 
 	api := r.Group("/api")
 	{
@@ -56,6 +57,12 @@ func SetupRouter() *gin.Engine {
 			protected.GET("/grades", controllers.GetGrades)
 			protected.POST("/grades", controllers.InputGrade)
 			protected.PUT("/grades/:id", controllers.UpdateGrade)
+
+			protected.GET("/users", controllers.GetUsers)
+			protected.POST("/users", controllers.CreateUser)
+			protected.PUT("/users/:id", controllers.UpdateUser)
+			protected.DELETE("/users/:id", controllers.DeleteUser)
+			protected.POST("/profile/avatar", controllers.UploadAvatar)
 
 			protected.GET("/dashboard/stats", controllers.GetDashboardStats)
 

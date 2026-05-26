@@ -33,7 +33,7 @@
             </div>
 
             <form @submit.prevent="saveSiteSettings" class="space-y-4">
-              <div class="flex flex-col space-y-1.5 max-w-md">
+              <div class="flex flex-col space-y-1.5 max-w-2xl">
                 <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Nama Website</label>
                 <input
                   v-model="siteSettings.site_name"
@@ -51,71 +51,6 @@
               </div>
             </form>
           </div>
-
-          <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6 shadow-[--shadow-sm] w-full">
-            <div class="flex items-center space-x-3 border-b border-[color:var(--color-border)] pb-4">
-              <LockIcon class="w-5 h-5 text-[color:var(--color-accent)] shrink-0" />
-              <div>
-                <h3 class="text-md font-bold text-[color:var(--color-heading)]">Keamanan Akun</h3>
-                <p class="text-xs text-[color:var(--color-muted)]">Perbarui kata sandi akun administrator Anda</p>
-              </div>
-            </div>
-
-            <form @submit.prevent="updatePassword" class="space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="flex flex-col space-y-1.5">
-                  <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Password Lama</label>
-                  <input
-                    v-model="passwordForm.old_password"
-                    :type="showPassword ? 'text' : 'password'"
-                    class="input w-full font-mono"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-
-                <div class="flex flex-col space-y-1.5">
-                  <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Password Baru</label>
-                  <input
-                    v-model="passwordForm.new_password"
-                    :type="showPassword ? 'text' : 'password'"
-                    class="input w-full font-mono"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-
-                <div class="flex flex-col space-y-1.5">
-                  <label class="text-xs uppercase tracking-wider text-[color:var(--color-text)] font-semibold">Konfirmasi Password Baru</label>
-                  <input
-                    v-model="passwordForm.confirm_password"
-                    :type="showPassword ? 'text' : 'password'"
-                    class="input w-full font-mono"
-                    placeholder="••••••••"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div class="flex items-center space-x-2 pt-1">
-                <input
-                  v-model="showPassword"
-                  type="checkbox"
-                  id="show-password-settings"
-                  class="h-4 w-4 rounded border-[color:var(--color-border)] bg-[color:var(--color-bg)] text-[color:var(--color-accent)] focus:ring-[color:var(--color-accent)] focus:ring-offset-[color:var(--color-surface)] cursor-pointer"
-                />
-                <label for="show-password-settings" class="text-xs text-[color:var(--color-text)] font-semibold select-none cursor-pointer">
-                  Tampilkan Kata Sandi
-                </label>
-              </div>
-
-              <div class="pt-2">
-                <button type="submit" class="button-primary w-full md:w-auto" :disabled="loading.password">
-                  {{ loading.password ? 'Mengubah...' : 'Perbarui Password' }}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       </main>
     </div>
@@ -126,7 +61,6 @@
 import { ref, onMounted } from "vue"
 import {
   Globe as GlobeIcon,
-  Lock as LockIcon,
   CheckCircle as CheckCircleIcon,
   AlertCircle as AlertCircleIcon
 } from "lucide-vue-next"
@@ -137,8 +71,9 @@ definePageMeta({
 })
 
 const api = useApi()
+
 const siteName = useState("siteName", () => "SMA N 1 METRO")
-const showPassword = ref(false)
+const currentUser = useState<any>("currentUser", () => null)
 
 const toast = ref<{ message: string; type: "success" | "error" }>({
   message: "",
@@ -146,18 +81,11 @@ const toast = ref<{ message: string; type: "success" | "error" }>({
 })
 
 const loading = ref({
-  site: false,
-  password: false
+  site: false
 })
 
 const siteSettings = ref({
   site_name: ""
-})
-
-const passwordForm = ref({
-  old_password: "",
-  new_password: "",
-  confirm_password: ""
 })
 
 function showToast(message: string, type: "success" | "error") {
@@ -168,6 +96,16 @@ function showToast(message: string, type: "success" | "error") {
 }
 
 onMounted(async () => {
+  const userJson = localStorage.getItem("user")
+  if (userJson && !currentUser.value) {
+    currentUser.value = JSON.parse(userJson)
+  }
+
+  if (currentUser.value?.role !== "admin") {
+    navigateTo("/dashboard")
+    return
+  }
+
   try {
     const res: any = await api.get("/api/settings")
     if (res.success && res.data) {
@@ -196,35 +134,6 @@ async function saveSiteSettings() {
     showToast(error.data?.message || "Terjadi kesalahan server", "error")
   } finally {
     loading.value.site = false
-  }
-}
-
-async function updatePassword() {
-  if (passwordForm.value.new_password !== passwordForm.value.confirm_password) {
-    showToast("Konfirmasi password baru tidak cocok", "error")
-    return
-  }
-
-  loading.value.password = true
-  try {
-    const res: any = await api.put("/api/settings/password", {
-      old_password: passwordForm.value.old_password,
-      new_password: passwordForm.value.new_password
-    })
-    if (res.success) {
-      showToast("Kata sandi administrator berhasil diperbarui", "success")
-      passwordForm.value = {
-        old_password: "",
-        new_password: "",
-        confirm_password: ""
-      }
-    } else {
-      showToast(res.message || "Gagal memperbarui password", "error")
-    }
-  } catch (error: any) {
-    showToast(error.data?.message || "Password lama salah", "error")
-  } finally {
-    loading.value.password = false
   }
 }
 </script>

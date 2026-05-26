@@ -23,6 +23,29 @@ func GetAttendances(c *gin.Context) {
 
 	query := config.DB.Preload("Student")
 
+	role, roleExists := c.Get("role")
+	if roleExists && (role == "siswa" || role == "siswi") {
+		userIdStr, userExists := c.Get("userId")
+		if !userExists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Sesi tidak valid",
+			})
+			return
+		}
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", userIdStr).Error; err != nil || user.StudentID == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    []models.Attendance{},
+				"message": "Akun siswa belum terhubung dengan profil siswa",
+			})
+			return
+		}
+		query = query.Where("student_id = ?", *user.StudentID)
+	}
+
 	studentID := c.Query("student_id")
 	if studentID != "" {
 		parsedUUID, err := uuid.Parse(studentID)
@@ -75,6 +98,44 @@ func InputAttendance(c *gin.Context) {
 			"message": "Date must be in YYYY-MM-DD format",
 		})
 		return
+	}
+
+	role, roleExists := c.Get("role")
+	if roleExists && (role == "siswa" || role == "siswi") {
+		userIdStr, userExists := c.Get("userId")
+		if !userExists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Sesi tidak valid",
+			})
+			return
+		}
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", userIdStr).Error; err != nil || user.StudentID == nil {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Akun siswa belum terhubung dengan profil siswa",
+			})
+			return
+		}
+		if input.StudentID != *user.StudentID {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Akses ditolak: Anda hanya dapat mengisi kehadiran diri Anda sendiri",
+			})
+			return
+		}
+		if parsedDate.Format("2006-01-02") != time.Now().Format("2006-01-02") {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Akses ditolak: Anda hanya diperbolehkan melakukan absensi mandiri untuk hari ini",
+			})
+			return
+		}
 	}
 
 	validStatuses := map[string]bool{"hadir": true, "sakit": true, "izin": true, "alpha": true}
@@ -147,6 +208,16 @@ func InputAttendance(c *gin.Context) {
 }
 
 func UpdateAttendance(c *gin.Context) {
+	role, roleExists := c.Get("role")
+	if roleExists && (role == "siswa" || role == "siswi") {
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Akses ditolak: Siswa tidak diperbolehkan mengubah catatan kehadiran",
+		})
+		return
+	}
+
 	id := c.Param("id")
 
 	var attendance models.Attendance

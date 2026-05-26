@@ -44,6 +44,25 @@
           </p>
         </div>
 
+        <div class="flex p-1 bg-[color:var(--color-bg)] border border-[color:var(--color-border)] rounded-lg">
+          <button
+            type="button"
+            @click="selectPreset('guru')"
+            class="flex-1 py-2 text-xs uppercase tracking-wider font-bold transition duration-150 cursor-pointer text-center rounded-md"
+            :class="selectedRole === 'guru' ? 'bg-[color:var(--color-accent)] text-white shadow-[--shadow-sm] font-extrabold' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
+          >
+            Guru
+          </button>
+          <button
+            type="button"
+            @click="selectPreset('siswa')"
+            class="flex-1 py-2 text-xs uppercase tracking-wider font-bold transition duration-150 cursor-pointer text-center rounded-md"
+            :class="selectedRole === 'siswa' ? 'bg-[color:var(--color-accent)] text-white shadow-[--shadow-sm] font-extrabold' : 'text-[color:var(--color-muted)] hover:text-[color:var(--color-text)]'"
+          >
+            Siswa
+          </button>
+        </div>
+
         <form @submit.prevent="handleLogin" class="space-y-6">
           <div v-if="errorMessage" class="bg-[color:var(--color-bg)] border border-[color:var(--color-error)] p-3 text-sm text-[color:var(--color-error)] font-medium flex items-center space-x-2">
             <AlertCircleIcon class="w-4 h-4 shrink-0" />
@@ -52,16 +71,15 @@
 
           <div class="space-y-1.5">
             <label for="email" class="block text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-bold">
-              Pos Elektronik
+              {{ selectedRole === 'siswa' ? 'NISN' : 'NIP' }}
             </label>
             <input
               id="email"
               v-model="email"
-              type="email"
+              type="text"
               class="input w-full"
-              placeholder="nama@sekolah.com"
+              :placeholder="selectedRole === 'siswa' ? 'Masukkan NISN' : 'Masukkan NIP'"
               required
-              autocomplete="email"
             />
           </div>
 
@@ -102,8 +120,10 @@
           </div>
         </form>
 
-        <div class="border-t border-[color:var(--color-border)] pt-6 text-center text-xs text-[color:var(--color-muted)]">
-          Gunakan <span class="font-mono text-[color:var(--color-text)]">admin@sekolah.com</span> / <span class="font-mono text-[color:var(--color-text)]">admin123</span> untuk masuk
+        <div class="border-t border-[color:var(--color-border)] pt-6 text-center text-xs text-[color:var(--color-muted)] space-y-1 leading-relaxed">
+          <div>Admin: <span class="font-mono text-[color:var(--color-text)]">admin@sekolah.com</span> / <span class="font-mono text-[color:var(--color-text)]">admin123</span></div>
+          <div>Guru: <span class="font-mono text-[color:var(--color-text)]">12345</span> / <span class="font-mono text-[color:var(--color-text)]">gurusmk</span></div>
+          <div>Siswa: <span class="font-mono text-[color:var(--color-text)]">10001</span> / <span class="font-mono text-[color:var(--color-text)]">1</span></div>
         </div>
       </div>
     </div>
@@ -129,6 +149,11 @@ const isLoading = ref(false)
 const errorMessage = ref("")
 const showPassword = ref(false)
 const siteName = useState("siteName", () => "SMA N 1 METRO")
+const selectedRole = ref("siswa")
+
+function selectPreset(role: string) {
+  selectedRole.value = role
+}
 
 const api = useApi()
 
@@ -160,7 +185,8 @@ async function handleLogin() {
   try {
     const res: any = await api.post("/api/auth/login", {
       email: email.value,
-      password: password.value
+      password: password.value,
+      role_group: selectedRole.value
     })
 
     if (res.success && res.data) {

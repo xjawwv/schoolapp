@@ -85,6 +85,25 @@
                 </div>
               </div>
             </div>
+
+            <div class="card space-y-4 shadow-[--shadow-sm]">
+              <h3 class="text-xs uppercase tracking-widest text-[color:var(--color-accent)] font-bold">
+                Kredensial Akses
+              </h3>
+              <div class="space-y-3 bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4 text-xs">
+                <div>
+                  <span class="text-[color:var(--color-muted)] block uppercase font-bold mb-1">Username / NISN</span>
+                  <span class="font-mono text-sm text-[color:var(--color-heading)] font-semibold">{{ student.nis }}</span>
+                </div>
+                <div>
+                  <span class="text-[color:var(--color-muted)] block uppercase font-bold mb-1">Kata Sandi Bawaan</span>
+                  <span class="font-mono text-sm text-[color:var(--color-heading)] font-semibold">1</span>
+                </div>
+                <div class="pt-2 border-t border-[color:var(--color-border)] text-[color:var(--color-muted)] leading-relaxed">
+                  Akun login siswa disinkronkan otomatis menggunakan NISN dan sandi default.
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="lg:col-span-8 space-y-6">

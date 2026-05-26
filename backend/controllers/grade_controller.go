@@ -23,6 +23,29 @@ func GetGrades(c *gin.Context) {
 
 	query := config.DB.Preload("Student")
 
+	role, roleExists := c.Get("role")
+	if roleExists && (role == "siswa" || role == "siswi") {
+		userIdStr, userExists := c.Get("userId")
+		if !userExists {
+			c.JSON(http.StatusUnauthorized, gin.H{
+				"success": false,
+				"data":    nil,
+				"message": "Sesi tidak valid",
+			})
+			return
+		}
+		var user models.User
+		if err := config.DB.First(&user, "id = ?", userIdStr).Error; err != nil || user.StudentID == nil {
+			c.JSON(http.StatusOK, gin.H{
+				"success": true,
+				"data":    []models.Grade{},
+				"message": "Akun siswa belum terhubung dengan profil siswa",
+			})
+			return
+		}
+		query = query.Where("student_id = ?", *user.StudentID)
+	}
+
 	studentID := c.Query("student_id")
 	if studentID != "" {
 		parsedUUID, err := uuid.Parse(studentID)
@@ -49,6 +72,16 @@ func GetGrades(c *gin.Context) {
 }
 
 func InputGrade(c *gin.Context) {
+	role, roleExists := c.Get("role")
+	if !roleExists || role != "guru" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Akses ditolak: Hanya Guru yang diperbolehkan menginput nilai baru",
+		})
+		return
+	}
+
 	var input GradeInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -128,6 +161,16 @@ func InputGrade(c *gin.Context) {
 }
 
 func UpdateGrade(c *gin.Context) {
+	role, roleExists := c.Get("role")
+	if !roleExists || (role != "guru" && role != "admin") {
+		c.JSON(http.StatusForbidden, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Akses ditolak: Hanya Guru dan Admin yang diperbolehkan memperbaiki nilai",
+		})
+		return
+	}
+
 	id := c.Param("id")
 
 	var grade models.Grade

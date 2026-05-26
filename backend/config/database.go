@@ -53,15 +53,27 @@ func seedData() {
 	var userCount int64
 	DB.Model(&models.User{}).Count(&userCount)
 	if userCount == 0 {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-		if err == nil {
+		hashedAdminPassword, errAdmin := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		if errAdmin == nil {
 			admin := models.User{
 				Name:     "Administrator",
 				Email:    "admin@sekolah.com",
-				Password: string(hashedPassword),
+				Password: string(hashedAdminPassword),
 				Role:     "admin",
 			}
 			DB.Create(&admin)
+		}
+
+		hashedGuruPassword, errGuru := bcrypt.GenerateFromPassword([]byte("gurusmk"), bcrypt.DefaultCost)
+		if errGuru == nil {
+			guru := models.User{
+				Name:     "Guru SMK",
+				Email:    "guru@sekolah.com",
+				NIP:      "12345",
+				Password: string(hashedGuruPassword),
+				Role:     "guru",
+			}
+			DB.Create(&guru)
 		}
 	}
 
@@ -83,6 +95,21 @@ func seedData() {
 
 		for i := range students {
 			DB.Create(&students[i])
+			hashedPassword, errPass := bcrypt.GenerateFromPassword([]byte("1"), bcrypt.DefaultCost)
+			if errPass == nil {
+				role := "siswa"
+				if students[i].Gender == "Perempuan" {
+					role = "siswi"
+				}
+				user := models.User{
+					Name:      students[i].Name,
+					Email:     "student_" + students[i].NIS + "@sekolah.com",
+					Password:  string(hashedPassword),
+					Role:      role,
+					StudentID: &students[i].ID,
+				}
+				DB.Create(&user)
+			}
 		}
 
 		var createdStudents []models.Student

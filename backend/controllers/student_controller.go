@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type StudentInput struct {
@@ -140,6 +141,20 @@ func CreateStudent(c *gin.Context) {
 		return
 	}
 
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("1"), bcrypt.DefaultCost)
+	role := "siswa"
+	if student.Gender == "Perempuan" {
+		role = "siswi"
+	}
+	user := models.User{
+		Name:      student.Name,
+		Email:     "student_" + student.NIS + "@sekolah.com",
+		Password:  string(hashedPassword),
+		Role:      role,
+		StudentID: &student.ID,
+	}
+	config.DB.Create(&user)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
 		"data":    student,
@@ -205,6 +220,18 @@ func UpdateStudent(c *gin.Context) {
 		return
 	}
 
+	var user models.User
+	if err := config.DB.Where("student_id = ?", student.ID).First(&user).Error; err == nil {
+		user.Name = student.Name
+		user.Email = "student_" + student.NIS + "@sekolah.com"
+		role := "siswa"
+		if student.Gender == "Perempuan" {
+			role = "siswi"
+		}
+		user.Role = role
+		config.DB.Save(&user)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    student,
@@ -252,6 +279,16 @@ func DeleteStudent(c *gin.Context) {
 			"success": false,
 			"data":    nil,
 			"message": "Failed to clean up associated student grade records",
+		})
+		return
+	}
+
+	if err := tx.Where("student_id = ?", id).Delete(&models.User{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"data":    nil,
+			"message": "Failed to clean up associated student user account",
 		})
 		return
 	}

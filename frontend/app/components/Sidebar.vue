@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, onMounted } from "vue"
 import { useRoute } from "vue-router"
 import {
   LayoutDashboard as LayoutDashboardIcon,
@@ -57,37 +57,62 @@ import {
   CalendarCheck as CalendarCheckIcon,
   Award as AwardIcon,
   Settings as SettingsIcon,
+  User as UserIcon,
   X as XIcon
 } from "lucide-vue-next"
 
 const route = useRoute()
 const isSidebarOpen = useState("sidebarOpen", () => false)
 const siteName = useState("siteName", () => "SMA N 1 METRO")
+const user = useState<any>("currentUser", () => null)
 
-const menuGroups = [
-  {
-    title: "Utama",
-    items: [
-      { label: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon }
-    ]
-  },
-  {
-    title: "Akademik",
-    items: [
-      { label: "Data Siswa", path: "/students", icon: UsersIcon },
-      { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
-      { label: "Nilai", path: "/grades", icon: AwardIcon }
-    ]
-  },
-  {
-    title: "Konfigurasi",
-    items: [
-      { label: "Setting", path: "/settings", icon: SettingsIcon }
-    ]
+const menuGroups = computed(() => {
+  const role = user.value?.role || ""
+
+  const academicItems = (role === "siswa" || role === "siswi")
+    ? [
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
+        { label: "Nilai", path: "/grades", icon: AwardIcon }
+      ]
+    : [
+        { label: "Data Siswa", path: "/students", icon: UsersIcon },
+        { label: "Absensi", path: "/attendance", icon: CalendarCheckIcon },
+        { label: "Nilai", path: "/grades", icon: AwardIcon }
+      ]
+
+  const configItems = []
+  configItems.push({ label: "Profil", path: "/profile", icon: UserIcon })
+  if (role === "admin") {
+    configItems.push({ label: "Setting", path: "/settings", icon: SettingsIcon })
   }
-]
+
+  return [
+    {
+      title: "Utama",
+      items: [
+        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboardIcon }
+      ]
+    },
+    {
+      title: "Akademik",
+      items: academicItems
+    },
+    {
+      title: "Konfigurasi",
+      items: configItems
+    }
+  ]
+})
+
+onMounted(() => {
+  const cached = localStorage.getItem("user")
+  if (cached && !user.value) {
+    user.value = JSON.parse(cached)
+  }
+})
 
 function isActive(path: string): boolean {
+  if (!route || !route.path) return false
   if (path === "/dashboard") {
     return route.path === "/dashboard"
   }

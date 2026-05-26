@@ -19,8 +19,23 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div class="lg:col-span-4">
-            <div class="card space-y-6 shadow-[--shadow-sm]">
+          <div class="lg:col-span-4" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
+            <div v-if="currentUser?.role === 'admin' && !isEdit" class="card space-y-4 shadow-[--shadow-sm] border-l-4 border-l-[color:var(--color-accent)]">
+              <div>
+                <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide mb-1">
+                  Revisi Nilai
+                </h3>
+                <p class="text-xs text-[color:var(--color-muted)] uppercase tracking-wider">
+                  Menu Administrasi Nilai
+                </p>
+              </div>
+              <div class="bg-[color:var(--color-bg)] border border-[color:var(--color-border)] p-4 text-xs text-[color:var(--color-text)] leading-relaxed space-y-2">
+                <p>Peran Administrator hanya diizinkan untuk merevisi atau memperbaiki nilai yang sudah terdaftar.</p>
+                <p>Silakan pilih salah satu catatan nilai pada tabel <strong>Daftar Nilai Siswa</strong> di samping, lalu klik tombol <strong>Ubah</strong> untuk melakukan revisi.</p>
+              </div>
+            </div>
+
+            <div v-else class="card space-y-6 shadow-[--shadow-sm]">
               <div>
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide mb-1">
                   {{ isEdit ? 'Ubah Catatan Nilai' : 'Input Nilai Baru' }}
@@ -112,13 +127,13 @@
             </div>
           </div>
 
-          <div class="lg:col-span-8">
+          <div :class="(currentUser?.role === 'siswa' || currentUser?.role === 'siswi') ? 'lg:col-span-12' : 'lg:col-span-8'">
             <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
               <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">
                   Daftar Nilai Siswa
                 </h3>
-                <div class="flex items-center space-x-2 shrink-0 w-full md:w-auto">
+                <div class="flex items-center space-x-2 shrink-0 w-full md:w-auto" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
                   <span class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold whitespace-nowrap">Filter Siswa:</span>
                   <select v-model="filterStudentID" class="input py-1 text-xs bg-[color:var(--color-bg)] select-arrow w-full md:max-w-xs" @change="loadGradesList">
                     <option value="">Semua Siswa</option>
@@ -139,7 +154,7 @@
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Semester</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Academic Year</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Score</th>
-                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right">Actions</th>
+                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -158,7 +173,7 @@
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">Semester {{ grade.semester }}</td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)] font-mono">{{ grade.academic_year }}</td>
                       <td class="py-3.5 px-4 text-sm text-right font-bold text-[color:var(--color-accent)] font-mono">{{ grade.score.toFixed(1) }}</td>
-                      <td class="py-3.5 px-4 text-sm text-right">
+                      <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
                         <button @click="startEdit(grade)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
                           Ubah
                         </button>
@@ -193,6 +208,7 @@ definePageMeta({
 })
 
 const api = useApi()
+const currentUser = useState<any>("currentUser", () => null)
 
 const studentsList = ref<any[]>([])
 const gradesList = ref<any[]>([])
@@ -213,6 +229,10 @@ const formData = ref({
 })
 
 onMounted(() => {
+  const cached = localStorage.getItem("user")
+  if (cached && !currentUser.value) {
+    currentUser.value = JSON.parse(cached)
+  }
   loadStudents()
   loadGradesList()
 })

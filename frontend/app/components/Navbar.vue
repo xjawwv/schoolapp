@@ -16,8 +16,9 @@
             @click="isMenuOpen = !isMenuOpen"
             class="flex items-center group p-2 rounded-lg hover:bg-[color:var(--color-bg)] transition duration-150 cursor-pointer focus:outline-none"
           >
-            <div class="h-8 w-8 rounded-full bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/20 flex items-center justify-center text-sm font-bold shrink-0">
-              {{ user.name.charAt(0) }}
+            <div class="h-8 w-8 rounded-full overflow-hidden border border-[color:var(--color-accent)]/20 bg-[color:var(--color-bg)] flex items-center justify-center text-sm font-bold shrink-0">
+              <img v-if="avatarUrl" :src="avatarUrl" class="w-full h-full object-cover" />
+              <span v-else class="text-[color:var(--color-accent)]">{{ user.name.charAt(0) }}</span>
             </div>
             <div class="ml-3 hidden md:block text-left">
               <p class="text-sm font-medium text-[color:var(--color-heading)] group-hover:text-[color:var(--color-accent)] transition duration-150 leading-tight">
@@ -70,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue"
+import { ref, onMounted, computed } from "vue"
 import {
   LogOut as LogOutIcon,
   Sun as SunIcon,
@@ -79,14 +80,21 @@ import {
   ChevronDown as ChevronDownIcon
 } from "lucide-vue-next"
 
-const user = ref<{ name: string; email: string; role: string } | null>(null)
+const user = useState<any>("currentUser", () => null)
+const config = useRuntimeConfig()
 const theme = ref("dark")
 const isSidebarOpen = useState("sidebarOpen", () => false)
 const isMenuOpen = ref(false)
 
+const avatarUrl = computed(() => {
+  if (!user.value?.avatar) return ""
+  if (user.value.avatar.startsWith("http")) return user.value.avatar
+  return `${config.public.apiUrl}${user.value.avatar}`
+})
+
 onMounted(() => {
   const cached = localStorage.getItem("user")
-  if (cached) {
+  if (cached && !user.value) {
     user.value = JSON.parse(cached)
   }
 
@@ -106,6 +114,7 @@ function toggleTheme() {
 function logout() {
   localStorage.removeItem("token")
   localStorage.removeItem("user")
+  user.value = null
   isMenuOpen.value = false
   navigateTo("/login")
 }
