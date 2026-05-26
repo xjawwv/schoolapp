@@ -55,7 +55,9 @@ func ConnectDB() {
 
 	DB.Exec("ALTER TABLE users DROP CONSTRAINT IF EXISTS idx_users_nip;")
 	DB.Exec("DROP INDEX IF EXISTS idx_users_nip;")
-	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nip ON users(nip) WHERE nip IS NOT NULL AND nip <> '';")
+	DB.Exec("ALTER TABLE users DROP CONSTRAINT IF EXISTS idx_users_n_ip;")
+	DB.Exec("DROP INDEX IF EXISTS idx_users_n_ip;")
+	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_n_ip ON users(nip) WHERE nip IS NOT NULL AND nip <> '';")
 
 	seedData()
 }
