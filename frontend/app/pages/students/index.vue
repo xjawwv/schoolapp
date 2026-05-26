@@ -26,16 +26,24 @@
 
         <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
           <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div class="relative w-full md:max-w-md">
-              <SearchIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-muted)] pointer-events-none" />
-              <input
-                v-model="searchQuery"
-                @input="handleSearch"
-                type="text"
-                class="input w-full"
-                style="padding-left: 2.75rem !important;"
-                placeholder="Cari berdasarkan nama, kelas, atau NIS..."
-              />
+            <div class="flex flex-col md:flex-row gap-3 w-full md:max-w-xl">
+              <div class="relative flex-1">
+                <SearchIcon class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--color-muted)] pointer-events-none" />
+                <input
+                  v-model="searchQuery"
+                  @input="handleSearch"
+                  type="text"
+                  class="input w-full"
+                  style="padding-left: 2.5rem !important;"
+                  placeholder="Cari berdasarkan nama, kelas, atau NIS..."
+                />
+              </div>
+              <select v-model="filterClass" class="input bg-[color:var(--color-bg)] select-arrow w-full md:w-40" @change="handleSearch">
+                <option value="">Semua Kelas</option>
+                <option value="X-A">X-A</option>
+                <option value="XI-B">XI-B</option>
+                <option value="XII-C">XII-C</option>
+              </select>
             </div>
             <div class="text-xs uppercase tracking-wider text-[color:var(--color-muted)] font-semibold shrink-0">
               Total Siswa: <span class="text-[color:var(--color-accent)]">{{ totalStudents }}</span>
@@ -195,6 +203,7 @@ const totalStudents = ref(0)
 const currentPage = ref(1)
 const totalPages = ref(1)
 const searchQuery = ref("")
+const filterClass = ref("")
 
 const showForm = ref(false)
 const selectedStudent = ref<any | null>(null)
@@ -234,7 +243,7 @@ onMounted(() => {
 
 async function fetchStudents() {
   try {
-    const res: any = await api.get(`/api/students?page=${currentPage.value}&limit=10&search=${searchQuery.value}`)
+    const res: any = await api.get(`/api/students?page=${currentPage.value}&limit=10&search=${searchQuery.value}&class=${filterClass.value}`)
     if (res.success && res.data) {
       students.value = res.data.students || []
       totalStudents.value = res.data.total || 0

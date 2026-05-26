@@ -45,6 +45,11 @@ func GetStudents(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR nis ILIKE ? OR class ILIKE ?", searchTerm, searchTerm, searchTerm)
 	}
 
+	class := c.Query("class")
+	if class != "" {
+		query = query.Where("class = ?", class)
+	}
+
 	query.Count(&total)
 
 	offset := (page - 1) * limit
