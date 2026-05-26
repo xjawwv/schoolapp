@@ -53,6 +53,7 @@ func ConnectDB() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
+	DB.Exec("ALTER TABLE users DROP CONSTRAINT IF EXISTS idx_users_nip;")
 	DB.Exec("DROP INDEX IF EXISTS idx_users_nip;")
 	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_nip ON users(nip) WHERE nip IS NOT NULL AND nip <> '';")
 
