@@ -19,7 +19,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div class="lg:col-span-4">
+          <div class="lg:col-span-4" v-if="currentUser?.role === 'siswa' || currentUser?.role === 'siswi'">
             <div class="card space-y-6 shadow-[--shadow-sm]">
               <div>
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide mb-1">
@@ -72,7 +72,7 @@
                     v-model="formData.note"
                     class="input w-full h-20 resize-none transition duration-150 disabled:cursor-not-allowed"
                     :class="(formData.status === 'hadir' || formData.status === 'alpha' || !formData.status) ? 'opacity-60 bg-[color:var(--color-surface)] cursor-not-allowed' : ''"
-                    :placeholder="(formData.status === 'hadir' || formData.status === 'alpha') ? 'Catatan hanya untuk status Izin atau Sakit' : 'Catatan opsional (misal: surat dokter)'"
+                    :placeholder="(formData.status === 'hadir' || formData.status === 'alpha') ? 'Catatan hanya untuk status Izin or Sakit' : 'Catatan opsional (misal: surat dokter)'"
                     :disabled="formData.status === 'hadir' || formData.status === 'alpha' || !formData.status"
                   ></textarea>
                 </div>
@@ -90,7 +90,7 @@
             </div>
           </div>
 
-          <div class="lg:col-span-8">
+          <div :class="(currentUser?.role === 'siswa' || currentUser?.role === 'siswi') ? 'lg:col-span-8' : 'lg:col-span-12'">
             <div class="bg-[color:var(--color-surface)] border border-[color:var(--color-border)] p-6 space-y-6">
               <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
                 <h3 class="text-lg font-bold text-[color:var(--color-heading)] tracking-wide">
@@ -112,7 +112,6 @@
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Date</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Status</th>
                       <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold">Notes</th>
-                      <th class="py-3 px-4 text-xs uppercase tracking-widest text-[color:var(--color-muted)] font-bold text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -135,14 +134,9 @@
                         </span>
                       </td>
                       <td class="py-3.5 px-4 text-sm text-[color:var(--color-text)]">{{ att.note || '-' }}</td>
-                      <td class="py-3.5 px-4 text-sm text-right" v-if="currentUser?.role !== 'siswa' && currentUser?.role !== 'siswi'">
-                        <button @click="startEdit(att)" class="text-xs uppercase tracking-wider text-[color:var(--color-accent)] hover:opacity-80 transition duration-100 cursor-pointer font-semibold">
-                          Ubah
-                        </button>
-                      </td>
                     </tr>
                     <tr v-if="attendancesList.length === 0">
-                      <td colspan="7" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
+                      <td colspan="6" class="py-12 text-center text-sm text-[color:var(--color-muted)] uppercase tracking-wider">
                         No attendance records found for the selected date
                       </td>
                     </tr>
