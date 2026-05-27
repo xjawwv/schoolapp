@@ -50,6 +50,44 @@ func GetPopupByID(c *gin.Context) {
 	})
 }
 
+func GetUnreadPopups(c *gin.Context) {
+	var popups []models.Popup
+	err := config.DB.Where("is_read = ?", false).Order("created_at desc").Find(&popups).Error
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"message": "Gagal memuat popup yang belum dibaca",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    popups,
+	})
+}
+
+func MarkPopupRead(c *gin.Context) {
+	id := c.Param("id")
+	var popup models.Popup
+	err := config.DB.Where("id = ?", id).First(&popup).Error
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"success": false,
+			"message": "Popup tidak ditemukan",
+		})
+		return
+	}
+
+	popup.IsRead = true
+	config.DB.Save(&popup)
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Popup ditandai sudah dibaca",
+	})
+}
+
 func CreatePopup(c *gin.Context) {
 	role, exists := c.Get("role")
 	if !exists || role != "admin" {

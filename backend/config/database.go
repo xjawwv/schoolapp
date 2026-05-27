@@ -50,6 +50,7 @@ func ConnectDB() {
 	DB.Exec(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title varchar(255) DEFAULT '';`)
 	DB.Exec(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS description text DEFAULT '';`)
 	DB.Exec(`ALTER TABLE notifications DROP COLUMN IF EXISTS message;`)
+	DB.Exec(`ALTER TABLE popups ADD COLUMN IF NOT EXISTS is_read boolean DEFAULT false;`)
 
 	err = DB.AutoMigrate(&models.User{}, &models.Student{}, &models.Attendance{}, &models.Grade{}, &models.Setting{}, &models.Notification{}, &models.Popup{})
 	if err != nil {

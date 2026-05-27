@@ -154,52 +154,81 @@
     </transition-group>
   </div>
 
-  <HeadlessDialog
-    :open="showPopupAnnouncement"
-    @close="showPopupAnnouncement = false"
-    class="relative z-[10000]"
-  >
-    <div class="fixed inset-0 bg-black/75 backdrop-blur-sm" aria-hidden="true" />
-
-    <div class="fixed inset-0 flex items-center justify-center p-4">
-      <HeadlessDialogPanel
-        class="w-full max-w-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)] border-l-4 border-l-[color:var(--color-accent)] shadow-2xl rounded-lg overflow-hidden p-6 flex flex-col space-y-4 relative text-left"
+  <Teleport to="body">
+    <transition
+      enter-active-class="transition duration-300 ease-out"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="showPopupAnnouncement"
+        class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        @click.self="dismissCurrentPopup"
       >
-        <button
-          @click="showPopupAnnouncement = false"
-          class="absolute top-4 right-4 text-[color:var(--color-muted)] hover:text-[color:var(--color-heading)] transition cursor-pointer p-1.5 hover:bg-[color:var(--color-bg)] rounded-md focus:outline-none"
+        <transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 translate-y-4 sm:scale-95"
+          enter-to-class="opacity-100 translate-y-0 sm:scale-100"
+          leave-active-class="transition duration-200 ease-in"
+          leave-from-class="opacity-100 translate-y-0 sm:scale-100"
+          leave-to-class="opacity-0 translate-y-4 sm:scale-95"
         >
-          <XIcon class="w-4 h-4" />
-        </button>
-
-        <div class="space-y-1">
-          <span class="text-[10px] font-bold text-[color:var(--color-accent)] tracking-widest uppercase">
-            Pengumuman Penting
-          </span>
-          <HeadlessDialogTitle class="text-xl font-black text-[color:var(--color-heading)] tracking-tight leading-tight">
-            {{ activePopup.title }}
-          </HeadlessDialogTitle>
-        </div>
-
-        <div class="rounded-md border border-[color:var(--color-border)] overflow-hidden w-full max-h-80 bg-black/20 flex items-center justify-center">
-          <img
-            v-if="activePopup.photo"
-            :src="activePopup.photo"
-            class="max-w-full max-h-80 object-contain"
-          />
-        </div>
-
-        <div class="pt-2 flex items-center justify-end">
-          <button
-            @click="showPopupAnnouncement = false"
-            class="button-primary text-xs py-2.5 px-5 font-semibold"
+          <div
+            v-if="showPopupAnnouncement"
+            class="relative w-full max-w-lg bg-[color:var(--color-surface)] border border-[color:var(--color-border)]/25 rounded-2xl shadow-2xl overflow-hidden text-left"
           >
-            Tutup Pengumuman
-          </button>
-        </div>
-      </HeadlessDialogPanel>
-    </div>
-  </HeadlessDialog>
+            <div class="absolute right-0 top-0 z-40 pr-3 pt-3">
+              <button
+                type="button"
+                @click="dismissCurrentPopup"
+                class="rounded-full p-1.5 bg-black/50 hover:bg-black/70 text-white transition duration-150 cursor-pointer focus:outline-none backdrop-blur-sm"
+              >
+                <XIcon class="w-5 h-5" />
+              </button>
+            </div>
+
+            <div class="w-full">
+              <img
+                v-if="activePopup.photo"
+                :src="activePopup.photo"
+                class="w-full h-auto object-center select-none"
+              />
+            </div>
+
+            <div class="relative flex flex-col items-center pt-4 text-[color:var(--color-text)]">
+              <div class="flex w-full items-center justify-center px-4">
+                <div class="flex flex-col items-center justify-center">
+                  <span class="text-[10px] text-[color:var(--color-muted)] font-mono">{{ currentPopupIndex + 1 }}/{{ totalPopupCount }}</span>
+                  <h2 class="max-w-xl pt-1 text-center text-sm font-semibold text-[color:var(--color-heading)]">
+                    {{ activePopup.title }}
+                  </h2>
+                </div>
+              </div>
+
+              <div class="flex w-full items-center justify-start px-4 py-3">
+                <div class="flex items-center">
+                  <input
+                    type="checkbox"
+                    v-model="dontShowAgain"
+                    class="h-4 w-4 cursor-pointer rounded border border-[color:var(--color-border)] bg-[color:var(--color-bg)] accent-[color:var(--color-accent)]"
+                  />
+                  <label
+                    class="select-none text-xs text-[color:var(--color-muted)] ml-2 cursor-pointer"
+                    @click="dontShowAgain = !dontShowAgain"
+                  >
+                    Jangan tampilkan lagi
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </transition>
+      </div>
+    </transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -225,7 +254,16 @@ const unreadCount = ref(0)
 const notifications = ref<Array<{ message: string; time: string }>>([])
 const activeToasts = ref<Array<{ id: string; title: string; message: string }>>([])
 const showPopupAnnouncement = ref(false)
-const activePopup = ref({ title: "", photo: "" })
+const activePopup = ref({ id: "", title: "", photo: "" })
+const popupQueue = ref<Array<{ id: string; title: string; photo: string }>>([])
+const dontShowAgain = ref(false)
+
+const currentPopupIndex = computed(() => {
+  const idx = popupQueue.value.findIndex((p) => p.id === activePopup.value.id)
+  return idx >= 0 ? idx : 0
+})
+
+const totalPopupCount = computed(() => popupQueue.value.length || 1)
 
 let socket: any = null
 
@@ -253,6 +291,47 @@ function getPhotoUrl(photo: string): string {
   return `${config.public.apiUrl}${photo}`
 }
 
+function showNextPopup() {
+  if (popupQueue.value.length === 0) {
+    showPopupAnnouncement.value = false
+    return
+  }
+
+  const next = popupQueue.value[0]
+  if (!next) return
+  dontShowAgain.value = false
+  activePopup.value = {
+    id: next.id,
+    title: next.title,
+    photo: getPhotoUrl(next.photo)
+  }
+  showPopupAnnouncement.value = true
+}
+
+async function dismissCurrentPopup() {
+  const currentId = activePopup.value.id
+  const shouldHidePermanently = dontShowAgain.value
+  showPopupAnnouncement.value = false
+
+  if (currentId) {
+    popupQueue.value = popupQueue.value.filter((p) => p.id !== currentId)
+    if (shouldHidePermanently) {
+      const userId = user.value?.id || "guest"
+      const storageKey = `dismissed_popups_${userId}`
+      const dismissed: string[] = JSON.parse(localStorage.getItem(storageKey) || "[]")
+      if (!dismissed.includes(currentId)) {
+        dismissed.push(currentId)
+        localStorage.setItem(storageKey, JSON.stringify(dismissed))
+      }
+    }
+  }
+
+  dontShowAgain.value = false
+  setTimeout(() => {
+    showNextPopup()
+  }, 400)
+}
+
 async function fetchNotifications() {
   try {
     const res: any = await api.get("/api/notifications")
@@ -269,6 +348,37 @@ async function fetchNotifications() {
   }
 }
 
+function getDismissedPopupIds(): string[] {
+  const userId = user.value?.id || "guest"
+  const storageKey = `dismissed_popups_${userId}`
+  return JSON.parse(localStorage.getItem(storageKey) || "[]")
+}
+
+async function fetchUnreadPopups() {
+  try {
+    const res: any = await api.get("/api/popups")
+    if (res.success && res.data && res.data.length > 0) {
+      const dismissed = getDismissedPopupIds()
+      for (const p of res.data) {
+        if (dismissed.includes(p.id)) continue
+        const exists = popupQueue.value.some((q) => q.id === p.id)
+        if (!exists) {
+          popupQueue.value.push({
+            id: p.id,
+            title: p.title,
+            photo: p.photo
+          })
+        }
+      }
+      if (!showPopupAnnouncement.value) {
+        showNextPopup()
+      }
+    }
+  } catch (error) {
+    console.error("Gagal memuat popup yang belum dibaca", error)
+  }
+}
+
 onMounted(() => {
   const cached = localStorage.getItem("user")
   if (cached) {
@@ -282,6 +392,7 @@ onMounted(() => {
   const token = localStorage.getItem("token")
   if (token) {
     fetchNotifications()
+    fetchUnreadPopups()
 
     const socketUrl = config.public.apiUrl || "http://localhost:8081"
     socket = io(socketUrl, {
@@ -311,11 +422,18 @@ onMounted(() => {
     })
 
     socket.on("popup", (data: any) => {
-      activePopup.value = {
-        title: data.title || "Pengumuman Visual Baru",
-        photo: data.photo ? getPhotoUrl(data.photo) : ""
+      const popupId = data.id || Math.random().toString()
+      const exists = popupQueue.value.some((q) => q.id === popupId)
+      if (!exists) {
+        popupQueue.value.push({
+          id: popupId,
+          title: data.title || "Pengumuman Visual Baru",
+          photo: data.photo || ""
+        })
       }
-      showPopupAnnouncement.value = true
+      if (!showPopupAnnouncement.value) {
+        showNextPopup()
+      }
     })
   }
 })

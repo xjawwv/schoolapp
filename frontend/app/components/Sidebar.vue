@@ -101,7 +101,7 @@ const menuGroups = computed(() => {
       items: academicItems
     },
     {
-      title: "Konfigurasi",
+      title: "Akun",
       items: configItems
     }
   ]
